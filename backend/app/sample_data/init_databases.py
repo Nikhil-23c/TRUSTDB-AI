@@ -167,14 +167,31 @@ def init_college_db():
             cursor.execute("INSERT INTO enrollments (student_id, course_id, semester, grade, marks) VALUES (?, ?, ?, ?, ?)",
                            (s_id, c_id, 4, grade, marks))
 
-    # Seed Attendance (ensure some students < 75% for querying low attendance)
-    for s_id, _, _, cgpa, _, _, _, _, _ in students:
-        total = 60
-        if s_id in [117, 119, 115]:
-            attended = random.randint(35, 43)  # < 75%
-        else:
-            attended = random.randint(46, 59)  # >= 75%
-        pct = round((attended / total) * 100, 2)
+    # Seed Attendance (deterministic: Arun 96%, Divya 94%, Karthik 91%, with low attendance < 75% for 117, 119, 115)
+    attendance_map = {
+        101: (60, 58, 96.0),  # Arun
+        102: (60, 56, 94.0),  # Divya
+        103: (60, 55, 91.0),  # Karthik
+        104: (60, 53, 88.33), # Meena
+        105: (60, 52, 86.67), # Rohit
+        106: (60, 51, 85.0),  # Priya
+        107: (60, 50, 83.33), # Sanjay
+        108: (60, 49, 81.67), # Ananya
+        109: (60, 48, 80.0),  # Vignesh
+        110: (60, 47, 78.33), # Sneha
+        111: (60, 46, 76.67), # Rahul
+        112: (60, 45, 75.0),  # Harini
+        113: (60, 46, 76.67), # Deepak
+        114: (60, 47, 78.33), # Kavya
+        115: (60, 42, 70.0),  # Manoj (< 75%)
+        116: (60, 46, 76.67), # Swetha
+        117: (60, 38, 63.33), # Naveen (< 75%)
+        118: (60, 49, 81.67), # Pooja
+        119: (60, 41, 68.33), # Suresh (< 75%)
+        120: (60, 54, 90.0),  # Nithya
+    }
+    for s_id, _, _, _, _, _, _, _, _ in students:
+        total, attended, pct = attendance_map.get(s_id, (60, 48, 80.0))
         cursor.execute("INSERT INTO attendance (student_id, course_id, total_classes, attended_classes, attendance_percentage) VALUES (?, ?, ?, ?, ?)",
                        (s_id, 'CS102', total, attended, pct))
 

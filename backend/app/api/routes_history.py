@@ -1,10 +1,11 @@
 """
 Query Audit Log and History Router.
-Tracks executed queries, timestamps, latency metrics, and success/error status.
+Tracks executed queries, timestamps, latency metrics, security guardrail status,
+and hallucination verification telemetry.
 """
 
 from fastapi import APIRouter
-from typing import List, Dict, Any
+from typing import List, Dict, Any, Optional
 from datetime import datetime
 
 router = APIRouter(prefix="/api/history", tags=["history"])
@@ -20,7 +21,11 @@ def record_audit_log(
     row_count: int,
     execution_time_ms: float,
     provider: str,
-    error: str = None
+    error: Optional[str] = None,
+    verification_status: Optional[str] = None,
+    reliability_score: Optional[int] = None,
+    verification_reason: Optional[str] = None,
+    verification_latency_ms: Optional[float] = None
 ):
     entry = {
         "id": len(AUDIT_LOGS) + 1,
@@ -32,7 +37,11 @@ def record_audit_log(
         "row_count": row_count,
         "execution_time_ms": execution_time_ms,
         "provider": provider,
-        "error": error
+        "error": error,
+        "verification_status": verification_status or ("VERIFIED" if status == "SUCCESS" else "N/A"),
+        "reliability_score": reliability_score,
+        "verification_reason": verification_reason,
+        "verification_latency_ms": verification_latency_ms
     }
     AUDIT_LOGS.insert(0, entry)
     # Keep last 100 entries
@@ -41,7 +50,7 @@ def record_audit_log(
 
 @router.get("", response_model=List[Dict[str, Any]])
 def get_history():
-    """Retrieve query execution audit trail."""
+    """Retrieve query execution audit trail with verification telemetry."""
     return AUDIT_LOGS
 
 @router.delete("")

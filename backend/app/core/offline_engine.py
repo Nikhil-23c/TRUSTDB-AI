@@ -60,20 +60,50 @@ LEFT JOIN departments d ON s.dept_id = d.dept_id
                     "sql": f"SELECT name, cgpa FROM students ORDER BY cgpa DESC LIMIT {lim};"
                 }
 
+            # Pattern: Specific Department student count (e.g. "How many students are in the AI department?")
+            if ("how many" in q_lower or "count" in q_lower) and ("department" in q_lower or "dept" in q_lower) and "attendance" not in q_lower and "cgpa" not in q_lower:
+                dept_filter = "Artificial Intelligence%" if ("ai" in q_lower or "artificial" in q_lower) else ("Computer Science%" if ("computer" in q_lower or "cse" in q_lower) else ("Information Technology%" if re.search(r'\bit\b', q_lower) else ("Electronics%" if "ece" in q_lower or "electronic" in q_lower else "Mechanical%")))
+                return {
+                    "intent": "Department Student Count",
+                    "entities": ["Students", "Departments", dept_filter.rstrip('%')],
+                    "limit": 1,
+                    "sort_by": None,
+                    "sql": f"""SELECT d.dept_name, COUNT(s.student_id) as student_count 
+FROM students s 
+JOIN departments d ON s.dept_id = d.dept_id 
+WHERE d.dept_name LIKE '{dept_filter}' 
+GROUP BY d.dept_name;"""
+                }
+
             # Pattern: Attendance with student names
             if "attendance" in q_lower:
                 thresh_match = re.search(r'(\d+)', q_lower)
-                threshold = int(thresh_match.group(1)) if (thresh_match and any(k in q_lower for k in ["less", "below", "under", "<", "shortage", "low"])) else (75 if any(k in q_lower for k in ["less", "below", "under", "<", "shortage", "low"]) else None)
+                is_greater = any(k in q_lower for k in ["more", "greater", "above", "over", ">", "exceeding", "higher than"])
+                is_less = any(k in q_lower for k in ["less", "below", "under", "<", "shortage", "low"])
                 
-                where_clause = f"WHERE a.attendance_percentage < {threshold}" if threshold else ""
-                order_clause = "ORDER BY s.name ASC" if is_alphabetical else ("ORDER BY a.attendance_percentage ASC" if threshold else "ORDER BY a.attendance_percentage DESC")
-                lim_clause = f"LIMIT {limit}" if limit else "LIMIT 15"
+                threshold = int(thresh_match.group(1)) if thresh_match else (75 if is_less else None)
+                
+                if threshold is not None:
+                    op = ">" if is_greater else "<"
+                    where_clause = f"WHERE a.attendance_percentage {op} {threshold}"
+                else:
+                    where_clause = ""
+                
+                # Check for "highest", "top", "best", "who has highest"
+                is_highest = any(k in q_lower for k in ["highest", "top", "best", "maximum", "max", "most"])
+                if is_highest:
+                    lim = limit if limit else (1 if ("who" in q_lower or "which" in q_lower) else 5)
+                else:
+                    lim = limit or 15
+                
+                order_clause = "ORDER BY s.name ASC" if is_alphabetical else ("ORDER BY a.attendance_percentage ASC" if is_less else "ORDER BY a.attendance_percentage DESC")
+                lim_clause = f"LIMIT {lim}"
                 
                 return {
                     "intent": "Student Attendance Overview",
                     "entities": ["Students", "Attendance", "Names"],
-                    "limit": limit or 15,
-                    "sort_by": "Name ASC" if is_alphabetical else "Attendance Percentage",
+                    "limit": lim,
+                    "sort_by": "Name ASC" if is_alphabetical else "Attendance Percentage DESC",
                     "sql": f"""SELECT s.name, s.email, a.attendance_percentage, a.attended_classes, a.total_classes 
 FROM students s 
 JOIN attendance a ON s.student_id = a.student_id 
