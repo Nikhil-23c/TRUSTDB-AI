@@ -24,8 +24,10 @@ FRONTEND_DIR = BASE_DIR.parent / "frontend"
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    db_file = BASE_DIR / "app" / "sample_data" / "college_records.db"
-    if not db_file.exists():
+    college_db = BASE_DIR / "app" / "sample_data" / "college_records.db"
+    ecom_db = BASE_DIR / "app" / "sample_data" / "ecommerce_store.db"
+    health_db = BASE_DIR / "app" / "sample_data" / "healthcare.db"
+    if not college_db.exists() or not ecom_db.exists() or not health_db.exists():
         print("Initializing sample databases on startup...")
         init_all()
     yield

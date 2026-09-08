@@ -31,6 +31,11 @@ htmlcov/
 # User uploads & temp
 uploads/*
 !uploads/.gitkeep
+backend/uploads/*
+!backend/uploads/.gitkeep
+*.db
+*.sqlite
+*.sqlite3
 
 # Environment variables & API keys
 .env

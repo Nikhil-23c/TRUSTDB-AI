@@ -42,16 +42,36 @@ class ChartDetector:
         if not rows or len(rows) < 2 or len(columns) < 2:
             return None
 
-        # Identify numeric and categorical columns
+        # Identify numeric and categorical columns by scanning rows
         numeric_cols = []
         categorical_cols = []
 
-        first_row = rows[0]
         for col in columns:
-            val = first_row.get(col)
-            if isinstance(val, (int, float)) and not str(col).endswith("_id") and str(col) != "id":
+            col_lower = str(col).lower()
+            if col_lower.endswith("_id") or col_lower == "id":
+                categorical_cols.append(col)
+                continue
+
+            # Find first non-null value across rows
+            sample_val = None
+            for r in rows:
+                v = r.get(col)
+                if v is not None and str(v).strip() != "":
+                    sample_val = v
+                    break
+
+            if sample_val is None:
+                continue
+
+            if isinstance(sample_val, (int, float)):
                 numeric_cols.append(col)
-            elif isinstance(val, str) or str(col).endswith("_id"):
+            elif isinstance(sample_val, str):
+                try:
+                    float(sample_val.strip())
+                    numeric_cols.append(col)
+                except ValueError:
+                    categorical_cols.append(col)
+            else:
                 categorical_cols.append(col)
 
         if not numeric_cols or not categorical_cols:
@@ -63,16 +83,23 @@ class ChartDetector:
 
         # Extract labels and values (limit to max 15 points for clarity)
         chart_rows = rows[:15]
-        labels = [str(r.get(label_col, f"Item {i+1}")) for i, r in enumerate(chart_rows)]
-        data_points = [r.get(value_col, 0) for r in chart_rows]
+        labels = [str(r.get(label_col) if r.get(label_col) is not None else f"Item {i+1}") for i, r in enumerate(chart_rows)]
+        
+        data_points = []
+        for r in chart_rows:
+            raw_v = r.get(value_col, 0)
+            try:
+                data_points.append(float(raw_v) if raw_v is not None else 0)
+            except (ValueError, TypeError):
+                data_points.append(0)
 
         # Determine Chart Type
         chart_type = "bar"
         is_pie_candidate = (
             len(chart_rows) <= 8 and
-            any(k in label_col.lower() for k in ["dept", "category", "tier", "status", "group", "gender", "type"])
+            any(k in label_col.lower() for k in ["dept", "category", "tier", "status", "group", "gender", "type", "payment"])
         )
-        is_line_candidate = any(k in label_col.lower() for k in ["date", "month", "year", "time", "day", "semester"])
+        is_line_candidate = any(k in label_col.lower() for k in ["date", "month", "year", "time", "day", "semester", "period"])
 
         if is_line_candidate:
             chart_type = "line"
@@ -86,8 +113,8 @@ class ChartDetector:
             bg_colors = [CHART_COLORS[i % len(CHART_COLORS)] for i in range(len(labels))]
             border_colors = [BORDER_COLORS[i % len(BORDER_COLORS)] for i in range(len(labels))]
         else:
-            bg_colors = "rgba(59, 130, 246, 0.2)"
-            border_colors = "rgb(59, 130, 246)"
+            bg_colors = "rgba(6, 182, 212, 0.2)"
+            border_colors = "rgb(6, 182, 212)"
 
         clean_value_name = value_col.replace("_", " ").title()
 
@@ -120,3 +147,4 @@ class ChartDetector:
                 }
             }
         }
+

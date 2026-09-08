@@ -65,3 +65,37 @@ async def test_query_security_block():
         })
         assert res.status_code == 403
         assert "Security Violation" in res.json()["detail"]
+
+@pytest.mark.anyio
+async def test_settings_get_and_update():
+    transport = ASGITransport(app=app)
+    async with AsyncClient(transport=transport, base_url="http://test") as ac:
+        # Get settings
+        res = await ac.get("/api/settings")
+        assert res.status_code == 200
+        data = res.json()
+        assert "llm_provider" in data
+        assert "max_query_rows" in data
+        
+        # Update settings
+        update_res = await ac.post("/api/settings", json={
+            "llm_provider": "offline",
+            "model_name": "gemini-2.0-flash"
+        })
+        assert update_res.status_code == 200
+        assert update_res.json()["status"] == "success"
+
+@pytest.mark.anyio
+async def test_history_endpoints():
+    transport = ASGITransport(app=app)
+    async with AsyncClient(transport=transport, base_url="http://test") as ac:
+        # Get history
+        res = await ac.get("/api/history")
+        assert res.status_code == 200
+        assert isinstance(res.json(), list)
+        
+        # Clear history
+        del_res = await ac.delete("/api/history")
+        assert del_res.status_code == 200
+        assert "cleared" in del_res.json()["message"]
+

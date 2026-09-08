@@ -1,7 +1,7 @@
 """
 Schema-Aware NL to SQL Engine.
 Orchestrates LLM inference (Google Gemini, OpenAI, Ollama) and seamlessly
-falls back to the Offline Heuristic Engine if no API key is provided.
+falls back to the Offline Heuristic Engine if no API key is provided or on any error.
 """
 
 import os
@@ -47,7 +47,7 @@ class NLToSQLEngine:
         """
         Translates a natural language query to SQL using LLM or offline engine.
         """
-        provider = provider or settings.llm_provider
+        provider = (provider or settings.llm_provider).lower()
         active_api_key = api_key or (settings.gemini_api_key if provider == "gemini" else settings.openai_api_key)
         
         # 1. Fetch Schema Metadata
@@ -63,18 +63,32 @@ class NLToSQLEngine:
 
         system_prompt = SYSTEM_PROMPT_TEMPLATE.format(schema_context=schema_text)
 
-        # 3. Call Gemini API
+        # 3. Call Gemini API (supports both google-genai and google-generativeai)
         if provider == "gemini":
             try:
-                from google import genai
-                client = genai.Client(api_key=active_api_key)
                 target_model = model_name or settings.model_name or "gemini-2.5-flash"
+                raw_text = ""
                 
-                response = client.models.generate_content(
-                    model=target_model,
-                    contents=f"{system_prompt}\n\nUser Question: {user_query}",
-                )
-                raw_text = response.text or ""
+                # Try new google.genai SDK
+                try:
+                    from google import genai
+                    client = genai.Client(api_key=active_api_key)
+                    response = client.models.generate_content(
+                        model=target_model,
+                        contents=f"{system_prompt}\n\nUser Question: {user_query}",
+                    )
+                    raw_text = response.text or ""
+                except (ImportError, AttributeError, Exception) as genai_err:
+                    # Fallback to google.generativeai SDK if installed
+                    try:
+                        import google.generativeai as legacy_genai
+                        legacy_genai.configure(api_key=active_api_key)
+                        model = legacy_genai.GenerativeModel(target_model)
+                        response = model.generate_content(f"{system_prompt}\n\nUser Question: {user_query}")
+                        raw_text = response.text or ""
+                    except Exception:
+                        raise genai_err
+
                 parsed = NLToSQLEngine._parse_llm_json(raw_text)
                 parsed["provider_used"] = f"gemini ({target_model})"
                 return parsed
@@ -148,30 +162,49 @@ class NLToSQLEngine:
     @staticmethod
     def _parse_llm_json(text: str) -> Dict[str, Any]:
         """Safely extracts and parses JSON from LLM output."""
-        clean = text.strip()
-        # Remove ```json and ```
-        clean = re.sub(r"^```(?:json)?\s*", "", clean, flags=re.IGNORECASE)
-        clean = re.sub(r"\s*```$", "", clean)
+        clean = (text or "").strip()
         
+        # 1. Check for markdown code fence anywhere in the string
+        code_fence_match = re.search(r'```(?:json)?\s*([\s\S]*?)\s*```', clean, re.IGNORECASE)
+        if code_fence_match:
+            candidate = code_fence_match.group(1).strip()
+            try:
+                data = json.loads(candidate)
+                if isinstance(data, dict):
+                    return data
+            except json.JSONDecodeError:
+                pass
+
+        # 2. Direct JSON load attempt
         try:
-            return json.loads(clean)
+            data = json.loads(clean)
+            if isinstance(data, dict):
+                return data
         except json.JSONDecodeError:
-            # Try to match first { ... } block
-            match = re.search(r'\{.*\}', clean, re.DOTALL)
-            if match:
-                try:
-                    return json.loads(match.group(0))
-                except Exception:
-                    pass
-            
-            # Extract SQL if JSON parsing failed
-            sql_match = re.search(r'SELECT\s+.*?;', clean, re.IGNORECASE | re.DOTALL)
-            sql = sql_match.group(0) if sql_match else clean
-            return {
-                "intent": "Generated Query",
-                "entities": [],
-                "sort_by": None,
-                "limit": None,
-                "sql": sql,
-                "explanation": "Extracted SQL directly from model response."
-            }
+            pass
+
+        # 3. Match outermost { ... } block
+        match = re.search(r'(\{[\s\S]*\})', clean)
+        if match:
+            candidate = match.group(1)
+            # Remove trailing commas before closing braces if present
+            fixed_candidate = re.sub(r',\s*([\}\]])', r'\1', candidate)
+            try:
+                data = json.loads(fixed_candidate)
+                if isinstance(data, dict):
+                    return data
+            except Exception:
+                pass
+        
+        # 4. Extract SQL directly if JSON structure failed
+        sql_match = re.search(r'(?:SELECT|WITH)\s+[\s\S]*?;', clean, re.IGNORECASE)
+        sql = sql_match.group(0).strip() if sql_match else clean
+        return {
+            "intent": "Generated Query",
+            "entities": [],
+            "sort_by": None,
+            "limit": None,
+            "sql": sql,
+            "explanation": "Extracted SQL directly from model response."
+        }
+

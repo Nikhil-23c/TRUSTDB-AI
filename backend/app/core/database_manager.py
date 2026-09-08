@@ -4,6 +4,7 @@ Manages connections to SQLite, PostgreSQL, MySQL, and handles dynamic schema dis
 """
 
 import os
+import re
 import time
 import sqlite3
 import csv
@@ -92,7 +93,7 @@ class DatabaseManager:
         return self.databases[db_id]
 
     def import_csv_to_sqlite(self, csv_file_path: str, table_name: str, db_name: Optional[str] = None) -> str:
-        """Import a CSV file into a dedicated SQLite database and return db_id."""
+        """Import a CSV file into a dedicated SQLite database with automatic type inference and return db_id."""
         clean_table_name = "".join([c if c.isalnum() else "_" for c in table_name]).strip("_") or "dataset"
         db_id = f"csv_{int(time.time())}_{clean_table_name.lower()}"
         sqlite_file = UPLOAD_DIR / f"{db_id}.db"
@@ -103,17 +104,74 @@ class DatabaseManager:
             if not headers:
                 raise ValueError("CSV file is empty.")
             
-            clean_headers = ["".join([c if c.isalnum() else "_" for c in h]).strip("_").lower() or f"col_{i}" for i, h in enumerate(headers)]
+            clean_headers = []
+            seen_cols = set()
+            for i, h in enumerate(headers):
+                c = "".join([ch if ch.isalnum() else "_" for ch in h]).strip("_").lower() or f"col_{i+1}"
+                if c in seen_cols:
+                    c = f"{c}_{i+1}"
+                seen_cols.add(c)
+                clean_headers.append(c)
             
+            rows = [row for row in reader if row]
+            
+            # Infer column types by inspecting rows
+            col_types = []
+            for col_idx in range(len(clean_headers)):
+                values = [r[col_idx].strip() for r in rows if col_idx < len(r) and r[col_idx].strip() != ""]
+                if not values:
+                    col_types.append("TEXT")
+                    continue
+                
+                # Check if all values are integer
+                is_int = True
+                is_real = True
+                for v in values:
+                    if not re.match(r'^-?\d+$', v):
+                        is_int = False
+                    if not re.match(r'^-?\d+(\.\d+)?$', v):
+                        is_real = False
+                
+                if is_int:
+                    col_types.append("INTEGER")
+                elif is_real:
+                    col_types.append("REAL")
+                else:
+                    col_types.append("TEXT")
+
             conn = sqlite3.connect(sqlite_file)
             cursor = conn.cursor()
-            cols_def = ", ".join([f'"{col}" TEXT' for col in clean_headers])
+            cols_def = ", ".join([f'"{col}" {t}' for col, t in zip(clean_headers, col_types)])
             cursor.execute(f'CREATE TABLE "{clean_table_name}" ({cols_def});')
             
+            # Convert values to int/float where applicable
+            formatted_rows = []
+            for r in rows:
+                row_vals = []
+                for col_idx in range(len(clean_headers)):
+                    if col_idx < len(r):
+                        v_str = r[col_idx].strip()
+                        if v_str == "":
+                            row_vals.append(None)
+                        elif col_types[col_idx] == "INTEGER":
+                            try:
+                                row_vals.append(int(v_str))
+                            except ValueError:
+                                row_vals.append(v_str)
+                        elif col_types[col_idx] == "REAL":
+                            try:
+                                row_vals.append(float(v_str))
+                            except ValueError:
+                                row_vals.append(v_str)
+                        else:
+                            row_vals.append(v_str)
+                    else:
+                        row_vals.append(None)
+                formatted_rows.append(row_vals)
+
             placeholders = ", ".join(["?"] * len(clean_headers))
-            rows = [row for row in reader if row]
-            if rows:
-                cursor.executemany(f'INSERT INTO "{clean_table_name}" VALUES ({placeholders})', rows)
+            if formatted_rows:
+                cursor.executemany(f'INSERT INTO "{clean_table_name}" VALUES ({placeholders})', formatted_rows)
             
             conn.commit()
             conn.close()
@@ -125,6 +183,7 @@ class DatabaseManager:
             description=f"Auto-generated SQL table '{clean_table_name}' with {len(rows)} rows from CSV."
         )
         return db_id
+
 
     def get_engine(self, db_id: str):
         """Create or retrieve SQLAlchemy engine for given db_id."""

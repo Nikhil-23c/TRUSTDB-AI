@@ -31,17 +31,18 @@ class ResultSummarizer:
         # Case 2: Single row with multiple fields (e.g. details of a student or product)
         if row_count == 1:
             row = rows[0]
-            name_key = next((k for k in ["name", "student_name", "dept_name", "category_name"] if k in row), None)
+            name_key = next((k for k in ["name", "student_name", "dept_name", "category_name", "product_name"] if k in row), None)
             if name_key:
-                details = ", ".join([f"**{k.replace('_', ' ').title()}**: {v}" for k, v in row.items() if k != name_key])
+                details = ", ".join([f"**{k.replace('_', ' ').title()}**: {v}" for k, v in row.items() if k != name_key and v is not None])
                 return f"Details for **{row[name_key]}**: {details}."
             else:
-                details = ", ".join([f"**{k.replace('_', ' ').title()}**: {v}" for k, v in row.items()])
+                details = ", ".join([f"**{k.replace('_', ' ').title()}**: {v}" for k, v in row.items() if v is not None])
                 return f"Result: {details}."
 
         # Case 3: Top N ranking (e.g., Top 5 students with highest CGPA)
-        if ("top" in user_query.lower() or "highest" in user_query.lower() or "best" in user_query.lower() or intent == "Get Top Records") and ("name" in columns):
-            metric_col = next((c for c in columns if c != "name" and c != "student_id"), columns[-1])
+        q_low = user_query.lower()
+        if ("top" in q_low or "highest" in q_low or "best" in q_low or intent == "Get Top Records") and ("name" in columns):
+            metric_col = next((c for c in columns if c != "name" and not c.endswith("_id") and c != "id"), columns[-1])
             metric_label = metric_col.replace("_", " ").upper()
             items = []
             for i, r in enumerate(rows, 1):
@@ -51,13 +52,36 @@ class ResultSummarizer:
             
             return f"Here are the top {row_count} records with the highest {metric_label}:\n\n" + "\n".join(items)
 
-        # Case 4: Grouped Aggregations (e.g. students per department, sales by category)
-        if len(columns) == 2 and any(isinstance(rows[0][columns[1]], (int, float)) for _ in [0]):
-            label_col, num_col = columns[0], columns[1]
-            num_label = num_col.replace("_", " ").title()
-            summary_items = [f"• **{r[label_col]}**: {r[num_col]}" for r in rows[:7]]
-            more = f"\n...and {row_count - 7} more" if row_count > 7 else ""
-            return f"Breakdown of {num_label} across {label_col.replace('_', ' ')}:\n\n" + "\n".join(summary_items) + more
+        # Case 4: Multi-metric Group Aggregations (e.g., departments with student counts and average CGPA)
+        if len(columns) >= 2 and any(isinstance(rows[0].get(c), (int, float)) for c in columns[1:]):
+            # Prioritize a non-ID name or textual label column
+            name_candidates = [c for c in columns if "name" in c.lower()]
+            text_candidates = [c for c in columns if not c.endswith("_id") and c != "id" and isinstance(rows[0].get(c), str)]
+            
+            if name_candidates:
+                label_col = name_candidates[0]
+            elif text_candidates:
+                label_col = text_candidates[0]
+            else:
+                label_col = columns[0]
+
+            metric_cols = [c for c in columns if c != label_col and not c.endswith("_id") and c != "id"]
+            if metric_cols:
+                summary_items = []
+                for r in rows[:7]:
+                    m_strs = [f"{c.replace('_', ' ').title()}: **{r.get(c)}**" for c in metric_cols if r.get(c) is not None]
+                    label_val = r.get(label_col, "Record")
+                    summary_items.append(f"• **{label_val}** ({', '.join(m_strs)})")
+                more = f"\n...and {row_count - 7} more" if row_count > 7 else ""
+                return f"Breakdown across **{label_col.replace('_', ' ').title()}**:\n\n" + "\n".join(summary_items) + more
 
         # Case 5: General multi-row summary
-        return f"Found **{row_count}** matching records for your query. The details are displayed in the table below."
+        name_col = next((c for c in columns if "name" in c.lower()), None)
+        if name_col and row_count <= 10:
+            names = [f"**{r.get(name_col)}**" for r in rows if r.get(name_col)]
+            if names:
+                return f"Found **{row_count}** matching records: {', '.join(names)}. Full details are displayed in the interactive grid."
+
+        return f"Found **{row_count}** matching records for your query. The details are displayed in the interactive grid."
+
+
