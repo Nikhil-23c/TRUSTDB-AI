@@ -87,20 +87,20 @@ class ResultSummarizer:
                 label_col = columns[0]
 
             metric_cols = [c for c in columns if c != label_col and not c.endswith("_id") and c != "id"]
-            if metric_cols:
+            if metric_cols and row_count <= 5:
                 summary_items = []
-                for r in rows[:7]:
+                for r in rows:
                     m_strs = [f"{c.replace('_', ' ').title()}: **{r.get(c)}**" for c in metric_cols if r.get(c) is not None]
                     label_val = r.get(label_col, "Record")
                     summary_items.append(f"• **{label_val}** ({', '.join(m_strs)})")
-                more = f"\n...and {row_count - 7} more" if row_count > 7 else ""
-                return f"Breakdown across **{label_col.replace('_', ' ').title()}**:\n\n" + "\n".join(summary_items) + more
+                return f"Breakdown across **{label_col.replace('_', ' ').title()}** ({row_count} records returned):\n\n" + "\n".join(summary_items)
+            else:
+                return f"Found **{row_count} records** matching your query. View full structured records in the interactive database table below."
 
         # Case 5: General multi-row summary
         name_col = next((c for c in columns if "name" in c.lower()), None)
-        if name_col and row_count <= 10:
-            names = [f"**{r.get(name_col)}**" for r in rows if r.get(name_col)]
-            if names:
-                return f"Found **{row_count}** matching records: {', '.join(names)}. Full details are displayed in the interactive grid."
+        if name_col and row_count <= 4:
+            items = [f"• **{r[name_col]}**" for r in rows if r.get(name_col)]
+            return f"Found **{row_count} matching records**:\n\n" + "\n".join(items)
 
-        return f"Found **{row_count}** matching records for your query. The details are displayed in the interactive grid."
+        return f"Found **{row_count} matching records** in the database. Complete structured records are displayed in the interactive grid below."

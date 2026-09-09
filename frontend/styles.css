@@ -240,6 +240,31 @@ select option {
   background: var(--bg-surface-hover);
 }
 
+/* Dual PS Identity Badges */
+.badge-ps7 {
+  background: var(--verified-bg);
+  border: 1px solid var(--verified-border);
+  color: var(--verified);
+  font-family: 'JetBrains Mono', monospace;
+  font-weight: 700;
+}
+
+.badge-ps2 {
+  background: var(--champagne-dim);
+  border: 1px solid var(--champagne-border);
+  color: var(--champagne);
+  font-family: 'JetBrains Mono', monospace;
+  font-weight: 700;
+}
+
+.badge-dual-merged {
+  background: linear-gradient(135deg, var(--verified-bg) 0%, var(--champagne-dim) 100%);
+  border: 1px solid var(--champagne-border);
+  color: var(--text-primary);
+  font-family: 'JetBrains Mono', monospace;
+  font-weight: 700;
+}
+
 /* Verification State Badges */
 .badge-verified-luxury {
   background: var(--verified-bg);
