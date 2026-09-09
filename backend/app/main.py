@@ -14,6 +14,7 @@ from app.api.routes_query import router as query_router
 from app.api.routes_database import router as db_router
 from app.api.routes_history import router as history_router
 from app.api.routes_settings import router as settings_router
+from app.api.routes_hallucination import router as hallucination_router
 from app.sample_data.init_databases import init_all
 from app.config import settings
 
@@ -53,6 +54,7 @@ app.include_router(query_router)
 app.include_router(db_router)
 app.include_router(history_router)
 app.include_router(settings_router)
+app.include_router(hallucination_router)
 
 # Serve static frontend files
 if FRONTEND_DIR.exists():

@@ -29,7 +29,7 @@ class AnswerVerifier:
         """
         Main entry point for answer verification.
         Evaluates grounding, extracts evidence, computes a reliability score (0-100),
-        and assigns a verification status.
+        hallucination risk index (0-100%), claim breakdown, and assigns a verification status.
         """
         start_time = time.perf_counter()
         clean_answer = (generated_answer or "").strip()
@@ -43,13 +43,25 @@ class AnswerVerifier:
             is_valid_empty, empty_score, empty_reason = empty_check
             exec_time = round((time.perf_counter() - start_time) * 1000, 2)
             status = "VERIFIED" if is_valid_empty else "UNVERIFIED"
+            risk_score = 0 if is_valid_empty else 95
+            risk_level = "LOW" if is_valid_empty else "CRITICAL"
             return {
                 "grounded": is_valid_empty,
                 "reliability_score": empty_score,
+                "hallucination_risk_pct": risk_score,
+                "hallucination_risk_level": risk_level,
                 "status": status,
                 "reason": empty_reason,
                 "evidence": ["Database returned 0 rows (Empty Set)"],
                 "verification_latency_ms": exec_time,
+                "claims_breakdown": [
+                    {
+                        "claim": clean_answer,
+                        "category": "Zero-Row Guard",
+                        "status": "GROUNDED" if is_valid_empty else "HALLUCINATED",
+                        "confidence": 100 if is_valid_empty else 10
+                    }
+                ],
                 "checks": {
                     "empty_result_check": {"passed": is_valid_empty, "score": empty_score},
                     "numeric_consistency": {"passed": is_valid_empty, "score": empty_score},
@@ -71,7 +83,7 @@ class AnswerVerifier:
         # 5. Check Aggregate Match
         aggregate_res = AnswerVerifier._check_aggregate_consistency(rows, columns, clean_answer, sql_query)
 
-        # 6. Compute Deterministic Reliability Score
+        # 6. Compute Deterministic Reliability Score & Hallucination Probability
         score, status, reason, is_grounded = AnswerVerifier._compute_score(
             numeric_res=numeric_res,
             entity_res=entity_res,
@@ -79,7 +91,22 @@ class AnswerVerifier:
             aggregate_res=aggregate_res
         )
 
+        claims_breakdown = AnswerVerifier._generate_claims_breakdown(
+            clean_answer, numeric_res, entity_res, claim_res, aggregate_res
+        )
+
+        hallucination_risk_pct = max(0, min(100, 100 - score))
+        if hallucination_risk_pct <= 10:
+            hallucination_risk_level = "MINIMAL"
+        elif hallucination_risk_pct <= 35:
+            hallucination_risk_level = "LOW"
+        elif hallucination_risk_pct <= 65:
+            hallucination_risk_level = "ELEVATED"
+        else:
+            hallucination_risk_level = "CRITICAL"
+
         checks_payload = {
+            "zero_row_barrier": {"passed": True, "score": 100},
             "numeric_consistency": numeric_res,
             "entity_consistency": entity_res,
             "claim_grounding": claim_res,
@@ -117,12 +144,81 @@ class AnswerVerifier:
         return {
             "grounded": is_grounded,
             "reliability_score": score,
+            "hallucination_risk_pct": hallucination_risk_pct,
+            "hallucination_risk_level": hallucination_risk_level,
             "status": status,
             "reason": reason,
             "evidence": evidence_list,
+            "claims_breakdown": claims_breakdown,
             "verification_latency_ms": exec_time,
             "checks": checks_payload
         }
+
+    @staticmethod
+    def _generate_claims_breakdown(
+        answer: str,
+        numeric_res: Dict[str, Any],
+        entity_res: Dict[str, Any],
+        claim_res: Dict[str, Any],
+        aggregate_res: Dict[str, Any]
+    ) -> List[Dict[str, Any]]:
+        """Generates token-level claim classification for UI visualization."""
+        claims = []
+        sentences = [s.strip() for s in re.split(r'[.\n]+', answer) if s.strip()]
+        
+        unmatched_nums = set(numeric_res.get("unmatched_numbers", []))
+        unmatched_ents = [e.lower() for e in entity_res.get("unmatched_entities", [])]
+        unsupported = claim_res.get("unsupported_claims", [])
+
+        for s in sentences:
+            s_low = s.lower()
+            # Check for qualitative superlative
+            found_unsupported = [u for u in unsupported if u in s_low]
+            if found_unsupported:
+                claims.append({
+                    "claim": s,
+                    "category": "Qualitative Superlative",
+                    "status": "HALLUCINATED",
+                    "flag": f"Unproven superlative: '{found_unsupported[0]}'",
+                    "confidence": 35
+                })
+                continue
+
+            # Check for ungrounded entity
+            found_ent = [e for e in unmatched_ents if e in s_low]
+            if found_ent:
+                claims.append({
+                    "claim": s,
+                    "category": "Entity Grounding",
+                    "status": "HALLUCINATED",
+                    "flag": f"Entity '{found_ent[0]}' not in database records",
+                    "confidence": 25
+                })
+                continue
+
+            # Check for unmatched numbers
+            s_nums = AnswerVerifier._extract_numbers(s)
+            found_bad_num = [n for n in s_nums if n in unmatched_nums]
+            if found_bad_num:
+                claims.append({
+                    "claim": s,
+                    "category": "Numeric Precision",
+                    "status": "HALLUCINATED",
+                    "flag": f"Number '{found_bad_num[0]}' mismatch with database rows",
+                    "confidence": 30
+                })
+                continue
+
+            # Otherwise claim is grounded
+            claims.append({
+                "claim": s,
+                "category": "Database Evidence",
+                "status": "GROUNDED",
+                "flag": "Verified against raw SQL rows",
+                "confidence": 98
+            })
+
+        return claims
 
     @staticmethod
     def _check_empty_result(rows: List[Dict[str, Any]], row_count: int, answer: str) -> Tuple[bool, int, str]:

@@ -258,3 +258,36 @@ async def test_api_dedicated_verify_endpoint():
         assert data["grounded"] is True
         assert data["status"] == "VERIFIED"
         assert data["reliability_score"] >= 90
+
+
+@pytest.mark.anyio
+async def test_hallucination_benchmarks_and_candidate_test():
+    """Tests the /api/hallucination endpoints: benchmarks, test-candidate, and telemetry."""
+    transport = ASGITransport(app=app)
+    async with AsyncClient(transport=transport, base_url="http://test") as ac:
+        # 1. Benchmarks
+        bench_res = await ac.get("/api/hallucination/benchmarks")
+        assert bench_res.status_code == 200
+        b_data = bench_res.json()
+        assert b_data["total_scenarios"] >= 6
+        assert len(b_data["scenarios"]) >= 6
+
+        # 2. Test candidate with blatant hallucination
+        test_res = await ac.post("/api/hallucination/test-candidate", json={
+            "question": "Who has the highest attendance?",
+            "database_id": "college_records",
+            "candidate_answer": "Arun has 96% attendance and is the best student in the college with 100% scholarship."
+        })
+        assert test_res.status_code == 200
+        t_data = test_res.json()
+        assert t_data["is_grounded"] is False
+        assert t_data["hallucination_detected"] is True
+        assert t_data["hallucination_risk_pct"] > 30
+        assert len(t_data["claims_breakdown"]) > 0
+
+        # 3. Telemetry
+        telem_res = await ac.get("/api/hallucination/telemetry")
+        assert telem_res.status_code == 200
+        telem_data = telem_res.json()
+        assert "hallucination_prevention_rate" in telem_data
+        assert len(telem_data["active_defense_layers"]) >= 5

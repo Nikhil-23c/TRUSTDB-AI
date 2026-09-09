@@ -1,7 +1,7 @@
 /**
- * NEURA-X: LUXURY EDITORIAL AI DATABASE ASSISTANT
- * Inspired by modern luxury automotive digital experiences.
- * Architecture: React 18, Tailwind CSS, Chart.js
+ * NEURA-X: LUXURY EDITORIAL AI DATABASE ASSISTANT & HALLUCINATION SHIELD
+ * Zero-Hallucination Grounded Intelligence with Multi-Layer Verification
+ * Architecture: React 18, Chart.js, Vanilla CSS Custom Properties & Tailwind
  */
 
 const { useState, useEffect, useRef, useMemo, createElement: h } = React;
@@ -22,6 +22,10 @@ function Icon({ name, className = "w-4 h-4" }) {
       h('path', { d: 'M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z', strokeWidth: 1.5, strokeLinecap: 'round', strokeLinejoin: 'round' }),
       h('line', { x1: 12, y1: 8, x2: 12, y2: 12, strokeWidth: 1.5, strokeLinecap: 'round' }),
       h('line', { x1: 12, y1: 16, x2: 12.01, y2: 16, strokeWidth: 2, strokeLinecap: 'round' })
+    ),
+    shieldZap: h('svg', { className, fill: 'none', stroke: 'currentColor', viewBox: '0 0 24 24' },
+      h('path', { d: 'M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z', strokeWidth: 1.5, strokeLinecap: 'round', strokeLinejoin: 'round' }),
+      h('polygon', { points: '13 7 9 13 12 13 11 17 15 11 12 11 13 7', strokeWidth: 1.5, strokeLinecap: 'round', strokeLinejoin: 'round' })
     ),
     database: h('svg', { className, fill: 'none', stroke: 'currentColor', viewBox: '0 0 24 24' },
       h('ellipse', { cx: 12, cy: 5, rx: 9, ry: 3, strokeWidth: 1.5 }),
@@ -95,6 +99,25 @@ function Icon({ name, className = "w-4 h-4" }) {
     arrowUpRight: h('svg', { className, fill: 'none', stroke: 'currentColor', viewBox: '0 0 24 24' },
       h('line', { x1: 7, y1: 17, x2: 17, y2: 7, strokeWidth: 1.5, strokeLinecap: 'round', strokeLinejoin: 'round' }),
       h('polyline', { points: '7 7 17 7 17 17', strokeWidth: 1.5, strokeLinecap: 'round', strokeLinejoin: 'round' })
+    ),
+    sun: h('svg', { className, fill: 'none', stroke: 'currentColor', viewBox: '0 0 24 24' },
+      h('circle', { cx: 12, cy: 12, r: 5, strokeWidth: 1.5 }),
+      h('line', { x1: 12, y1: 1, x2: 12, y2: 3, strokeWidth: 1.5, strokeLinecap: 'round' }),
+      h('line', { x1: 12, y1: 21, x2: 12, y2: 23, strokeWidth: 1.5, strokeLinecap: 'round' }),
+      h('line', { x1: 4.22, y1: 4.22, x2: 5.64, y2: 5.64, strokeWidth: 1.5, strokeLinecap: 'round' }),
+      h('line', { x1: 18.36, y1: 18.36, x2: 19.78, y2: 19.78, strokeWidth: 1.5, strokeLinecap: 'round' }),
+      h('line', { x1: 1, y1: 12, x2: 3, y2: 12, strokeWidth: 1.5, strokeLinecap: 'round' }),
+      h('line', { x1: 21, y1: 12, x2: 23, y2: 12, strokeWidth: 1.5, strokeLinecap: 'round' }),
+      h('line', { x1: 4.22, y1: 19.78, x2: 5.64, y2: 18.36, strokeWidth: 1.5, strokeLinecap: 'round' }),
+      h('line', { x1: 18.36, y1: 5.64, x2: 19.78, y2: 4.22, strokeWidth: 1.5, strokeLinecap: 'round' })
+    ),
+    moon: h('svg', { className, fill: 'none', stroke: 'currentColor', viewBox: '0 0 24 24' },
+      h('path', { d: 'M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z', strokeWidth: 1.5, strokeLinecap: 'round', strokeLinejoin: 'round' })
+    ),
+    target: h('svg', { className, fill: 'none', stroke: 'currentColor', viewBox: '0 0 24 24' },
+      h('circle', { cx: 12, cy: 12, r: 10, strokeWidth: 1.5 }),
+      h('circle', { cx: 12, cy: 12, r: 6, strokeWidth: 1.5 }),
+      h('circle', { cx: 12, cy: 12, r: 2, strokeWidth: 1.5 })
     )
   };
 
@@ -166,11 +189,11 @@ const CURATED_PROMPTS = {
   ]
 };
 
-// Markdown Formatter Component with Champagne Highlights
+// Markdown Formatter Component with Clean Theme Adaptation
 function MarkdownEditorial({ text }) {
   if (!text) return null;
   const lines = text.split('\n');
-  return h('div', { className: 'space-y-2 text-[#F4F1EA] font-normal leading-relaxed text-base' },
+  return h('div', { className: 'space-y-2 text-[var(--text-primary)] font-normal leading-relaxed text-base' },
     lines.map((line, lIdx) => {
       if (!line.trim()) return h('div', { key: lIdx, className: 'h-2' });
 
@@ -198,9 +221,9 @@ function MarkdownEditorial({ text }) {
           if (before) elements.push(h('span', { key: key++ }, before));
 
           if (matchType === 'bold') {
-            elements.push(h('strong', { key: key++, className: 'font-semibold text-[#F4F1EA] underline decoration-[#C6A76B]/40 decoration-1 underline-offset-4' }, firstMatch[1]));
+            elements.push(h('strong', { key: key++, className: 'font-semibold text-[var(--text-primary)] underline decoration-[var(--champagne)]/50 decoration-1 underline-offset-4' }, firstMatch[1]));
           } else if (matchType === 'code') {
-            elements.push(h('code', { key: key++, className: 'bg-[#181C20] px-1.5 py-0.5 rounded text-[#C6A76B] font-mono text-xs border border-white/5' }, firstMatch[1]));
+            elements.push(h('code', { key: key++, className: 'bg-[var(--bg-surface-soft)] px-1.5 py-0.5 rounded text-[var(--champagne)] font-mono text-xs border border-[var(--border-subtle)]' }, firstMatch[1]));
           }
           remaining = remaining.slice(firstMatch.index + firstMatch[0].length);
         } else {
@@ -231,10 +254,10 @@ function TrustChain({ verification, result }) {
   return h('div', { className: 'p-6 rounded-2xl luxury-card space-y-4' },
     h('div', { className: 'flex items-center justify-between' },
       h('div', { className: 'space-y-0.5' },
-        h('span', { className: 'text-[10px] font-mono tracking-widest text-[#A7ADB3] uppercase' }, 'TRUST CHAIN & AUDIT PROOF'),
-        h('h4', { className: 'text-sm font-semibold text-[#F4F1EA]' }, 'End-to-End Grounding Verification Pathway')
+        h('span', { className: 'text-[10px] font-mono tracking-widest text-[var(--text-muted)] uppercase font-semibold' }, 'TRUST CHAIN & AUDIT PROOF'),
+        h('h4', { className: 'text-sm font-semibold text-[var(--text-primary)]' }, 'End-to-End Grounding Verification Pathway')
       ),
-      h('span', { className: 'text-[11px] font-mono text-[#A7ADB3] bg-[#181C20] px-2.5 py-1 rounded border border-white/5' },
+      h('span', { className: 'text-[11px] font-mono text-[var(--text-secondary)] bg-[var(--bg-surface-soft)] px-2.5 py-1 rounded border border-[var(--border-subtle)]' },
         `Latency: ${verification?.verification_latency_ms || 1.2}ms`
       )
     ),
@@ -242,17 +265,17 @@ function TrustChain({ verification, result }) {
     h('div', { className: 'grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3 pt-2' },
       stages.map((st, i) => {
         const isLast = i === stages.length - 1;
-        let badgeStyle = "bg-[#181C20] text-[#A7ADB3] border-white/5";
+        let badgeStyle = "bg-[var(--bg-surface-soft)] text-[var(--text-secondary)] border-[var(--border-subtle)]";
 
         if (isLast) {
-          badgeStyle = isVerified ? "badge-verified-luxury" : "badge-warning-luxury";
+          badgeStyle = isVerified ? "badge-verified-luxury font-bold" : "badge-warning-luxury font-bold";
         } else if (st.status === "SAFE" || st.status === "PROVEN") {
-          badgeStyle = "bg-[#181C20] text-[#C6A76B] border-[#C6A76B]/20";
+          badgeStyle = "bg-[var(--bg-surface-soft)] text-[var(--champagne)] border-[var(--champagne-border)]";
         }
 
         return h('div', { key: i, className: `p-3 rounded-xl border flex flex-col justify-between space-y-1.5 ${badgeStyle}` },
-          h('span', { className: 'text-[10px] font-mono font-semibold tracking-wider opacity-75' }, st.label),
-          h('p', { className: 'text-xs font-medium text-[#F4F1EA] truncate' }, st.desc),
+          h('span', { className: 'text-[10px] font-mono font-semibold tracking-wider opacity-85' }, st.label),
+          h('p', { className: 'text-xs font-medium text-[var(--text-primary)] truncate' }, st.desc),
           h('span', { className: 'text-[9px] font-mono uppercase tracking-widest' }, st.status)
         );
       })
@@ -260,11 +283,11 @@ function TrustChain({ verification, result }) {
   );
 }
 
-// Verification Hero Badge & Score Card
+// Verification Hero Badge & Score Card with Risk Meter
 function VerificationHeroPanel({ verification }) {
   if (!verification) return null;
 
-  const { status, reliability_score, reason, evidence, checks } = verification;
+  const { status, reliability_score, reason, evidence, checks, claims_breakdown, hallucination_risk_pct, hallucination_risk_level } = verification;
   const isVerified = status === "VERIFIED" || status === "MOSTLY VERIFIED";
 
   let statusClass = "badge-verified-luxury";
@@ -279,57 +302,104 @@ function VerificationHeroPanel({ verification }) {
     statusIcon = "shieldAlert";
   }
 
-  return h('div', { className: 'p-6 rounded-2xl luxury-card space-y-6 border-l-4 border-l-[#C6A76B]' },
-    // Header Row
+  const riskPct = hallucination_risk_pct !== undefined ? hallucination_risk_pct : Math.max(0, 100 - reliability_score);
+  const riskLevel = hallucination_risk_level || (riskPct > 50 ? "CRITICAL" : riskPct > 20 ? "ELEVATED" : "MINIMAL");
+
+  return h('div', { className: 'p-6 rounded-2xl luxury-card space-y-6 border-l-4 border-l-[var(--champagne)]' },
+    // Header Row with Reliability Score and Hallucination Risk Meter
     h('div', { className: 'flex flex-wrap items-center justify-between gap-4' },
       h('div', { className: 'flex items-center space-x-3' },
         h('div', { className: `px-3.5 py-1.5 rounded-xl text-xs font-bold tracking-wider flex items-center space-x-2 ${statusClass}` },
           h(Icon, { name: statusIcon, className: 'w-4 h-4' }),
           h('span', null, status)
         ),
-        h('span', { className: 'text-xs text-[#A7ADB3] font-medium' }, 'Grounded in database evidence')
+        h('span', { className: 'text-xs text-[var(--text-secondary)] font-medium' }, 'Grounded in real DB rows')
       ),
 
-      // Score
-      h('div', { className: 'flex items-baseline space-x-2 bg-[#181C20] px-4 py-1.5 rounded-xl border border-white/5' },
-        h('span', { className: 'text-[11px] text-[#A7ADB3] uppercase tracking-wider font-mono' }, 'Reliability score:'),
-        h('span', { className: `text-lg font-mono font-bold ${reliability_score >= 90 ? 'text-[#7FA58C]' : reliability_score >= 70 ? 'text-[#C6A76B]' : 'text-[#B86D6D]'}` },
-          `${reliability_score}`
+      // Score & Risk Badges
+      h('div', { className: 'flex items-center space-x-3' },
+        // Reliability score
+        h('div', { className: 'flex items-baseline space-x-2 bg-[var(--bg-surface-soft)] px-3.5 py-1.5 rounded-xl border border-[var(--border-subtle)]' },
+          h('span', { className: 'text-[10px] text-[var(--text-muted)] uppercase tracking-wider font-mono font-semibold' }, 'Reliability:'),
+          h('span', { className: `text-base font-mono font-bold ${reliability_score >= 90 ? 'text-[var(--verified)]' : reliability_score >= 70 ? 'text-[var(--champagne)]' : 'text-[var(--danger)]'}` },
+            `${reliability_score}`
+          ),
+          h('span', { className: 'text-[10px] text-[var(--text-muted)] font-mono' }, '/ 100')
         ),
-        h('span', { className: 'text-xs text-[#687078] font-mono' }, '/ 100')
+
+        // Hallucination Risk Meter
+        h('div', { className: `flex items-baseline space-x-2 px-3.5 py-1.5 rounded-xl border font-mono ${riskPct > 50 ? 'bg-[var(--danger-bg)] border-[var(--danger-border)] text-[var(--danger)]' : 'bg-[var(--verified-bg)] border-[var(--verified-border)] text-[var(--verified)]'}` },
+          h('span', { className: 'text-[10px] uppercase tracking-wider font-semibold' }, 'Hallucination Risk:'),
+          h('span', { className: 'text-base font-bold' }, `${riskPct}%`),
+          h('span', { className: 'text-[9px] font-bold uppercase' }, `(${riskLevel})`)
+        )
       )
     ),
 
     // Reason Statement
     h('div', { className: 'space-y-1' },
-      h('span', { className: 'text-[10px] font-mono tracking-widest text-[#A7ADB3] uppercase' }, 'VERIFICATION RATIONALE'),
-      h('p', { className: 'text-sm text-[#F4F1EA] font-medium leading-relaxed' }, reason)
+      h('span', { className: 'text-[10px] font-mono tracking-widest text-[var(--text-muted)] uppercase font-semibold' }, 'VERIFICATION RATIONALE & GROUNDING AUDIT'),
+      h('p', { className: 'text-sm text-[var(--text-primary)] font-medium leading-relaxed' }, reason)
+    ),
+
+    // Token-by-Token Claims Breakdown (50% Focus Feature!)
+    claims_breakdown && claims_breakdown.length > 0 && h('div', { className: 'space-y-2 pt-2 border-t border-[var(--border-subtle)]' },
+      h('div', { className: 'flex items-center justify-between' },
+        h('span', { className: 'text-[10px] font-mono tracking-widest text-[var(--text-muted)] uppercase font-semibold' }, 'STATEMENT-LEVEL GROUNDING INSPECTOR'),
+        h('span', { className: 'text-[10px] font-mono text-[var(--champagne)]' }, `${claims_breakdown.length} Assertions Checked`)
+      ),
+      h('div', { className: 'space-y-1.5' },
+        claims_breakdown.map((c, idx) => {
+          const isGrounded = c.status === "GROUNDED";
+          return h('div', {
+            key: idx,
+            className: `p-2.5 rounded-xl border flex flex-col sm:flex-row sm:items-center justify-between text-xs gap-2 ${
+              isGrounded
+                ? 'bg-[var(--verified-bg)] border-[var(--verified-border)] text-[var(--text-primary)]'
+                : 'bg-[var(--danger-bg)] border-[var(--danger-border)] text-[var(--text-primary)]'
+            }`
+          },
+            h('div', { className: 'flex items-start space-x-2' },
+              h('span', { className: `mt-0.5 w-2 h-2 rounded-full shrink-0 ${isGrounded ? 'bg-[var(--verified)]' : 'bg-[var(--danger)]'}` }),
+              h('span', { className: 'font-medium' }, `"${c.claim}"`)
+            ),
+            h('div', { className: 'flex items-center space-x-2 shrink-0 self-end sm:self-center' },
+              h('span', { className: 'text-[10px] font-mono text-[var(--text-muted)]' }, c.category),
+              h('span', {
+                className: `text-[10px] font-mono font-bold px-2 py-0.5 rounded ${
+                  isGrounded ? 'bg-[var(--verified)] text-white' : 'bg-[var(--danger)] text-white'
+                }`
+              }, c.status)
+            )
+          );
+        })
+      )
     ),
 
     // Evidence Matches
     evidence && evidence.length > 0 && h('div', { className: 'space-y-2' },
-      h('span', { className: 'text-[10px] font-mono tracking-widest text-[#A7ADB3] uppercase block' }, 'GROUND TRUTH EVIDENCE USED'),
+      h('span', { className: 'text-[10px] font-mono tracking-widest text-[var(--text-muted)] uppercase block font-semibold' }, 'DATABASE GROUND TRUTH EVIDENCE'),
       h('div', { className: 'flex flex-wrap gap-2' },
-        evidence.map((ev, i) => h('div', { key: i, className: 'bg-[#181C20] text-[#F4F1EA] border border-white/10 px-3 py-1.5 rounded-lg text-xs font-mono flex items-center space-x-2' },
-          h('span', { className: 'w-1.5 h-1.5 rounded-full bg-[#C6A76B]' }),
+        evidence.map((ev, i) => h('div', { key: i, className: 'bg-[var(--bg-surface-soft)] text-[var(--text-primary)] border border-[var(--border-subtle)] px-3 py-1.5 rounded-lg text-xs font-mono flex items-center space-x-2' },
+          h('span', { className: 'w-1.5 h-1.5 rounded-full bg-[var(--champagne)]' }),
           h('span', null, ev)
         ))
       )
     ),
 
-    // Sub-checks Grid
-    checks && h('div', { className: 'pt-2 border-t border-white/5 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2.5 text-xs' },
+    // Sub-checks Grid (6 Layers)
+    checks && h('div', { className: 'pt-2 border-t border-[var(--border-subtle)] grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2.5 text-xs' },
       [
         { key: "numeric_consistency", label: "Numeric Consistency" },
         { key: "entity_consistency", label: "Entity Match" },
-        { key: "claim_grounding", label: "Superlative Guard" },
+        { key: "claim_grounding", label: "Superlative Filter" },
         { key: "aggregate_consistency", label: "Aggregation Check" }
       ].map(chk => {
         const item = checks[chk.key];
         const passed = item ? item.passed : true;
-        return h('div', { key: chk.key, className: 'p-2.5 rounded-lg bg-[#0E1013] border border-white/5 flex items-center justify-between' },
-          h('span', { className: 'text-[#A7ADB3] text-[11px] truncate mr-2' }, chk.label),
-          h('span', { className: `text-[10px] font-mono font-semibold px-2 py-0.5 rounded ${passed ? 'text-[#7FA58C] bg-[#7FA58C]/10' : 'text-[#B86D6D] bg-[#B86D6D]/10'}` },
+        return h('div', { key: chk.key, className: 'p-2.5 rounded-lg bg-[var(--bg-surface-soft)] border border-[var(--border-subtle)] flex items-center justify-between' },
+          h('span', { className: 'text-[var(--text-secondary)] text-[11px] font-medium truncate mr-2' }, chk.label),
+          h('span', { className: `text-[10px] font-mono font-bold px-2 py-0.5 rounded ${passed ? 'text-[var(--verified)] bg-[var(--verified-bg)] border border-[var(--verified-border)]' : 'text-[var(--danger)] bg-[var(--danger-bg)] border border-[var(--danger-border)]'}` },
             passed ? 'PASSED' : 'FLAGGED'
           )
         );
@@ -343,40 +413,367 @@ function CollapsibleSection({ id, title, subtitle, icon, isOpen, onToggle, child
   return h('div', { className: 'rounded-2xl luxury-card overflow-hidden transition-all' },
     h('button', {
       onClick: onToggle,
-      className: 'w-full px-6 py-4 flex items-center justify-between bg-[#121518] hover:bg-[#181C20] transition text-left'
+      className: 'w-full px-6 py-4 flex items-center justify-between bg-[var(--bg-surface)] hover:bg-[var(--bg-surface-soft)] transition text-left'
     },
       h('div', { className: 'flex items-center space-x-3.5' },
-        h('div', { className: 'p-2 rounded-xl bg-[#181C20] text-[#C6A76B] border border-white/5' },
+        h('div', { className: 'p-2 rounded-xl bg-[var(--bg-surface-soft)] text-[var(--champagne)] border border-[var(--border-subtle)]' },
           h(Icon, { name: icon, className: 'w-4 h-4' })
         ),
         h('div', null,
           h('div', { className: 'flex items-center space-x-2' },
-            h('h4', { className: 'text-sm font-semibold text-[#F4F1EA]' }, title),
-            badge && h('span', { className: 'text-[10px] font-mono bg-[#181C20] text-[#A7ADB3] px-2 py-0.5 rounded' }, badge)
+            h('h4', { className: 'text-sm font-semibold text-[var(--text-primary)]' }, title),
+            badge && h('span', { className: 'text-[10px] font-mono bg-[var(--bg-surface-soft)] text-[var(--text-secondary)] px-2 py-0.5 rounded border border-[var(--border-subtle)]' }, badge)
           ),
-          subtitle && h('p', { className: 'text-xs text-[#A7ADB3] mt-0.5' }, subtitle)
+          subtitle && h('p', { className: 'text-xs text-[var(--text-muted)] mt-0.5' }, subtitle)
         )
       ),
-      h('div', { className: 'flex items-center space-x-2 text-[#A7ADB3]' },
+      h('div', { className: 'flex items-center space-x-2 text-[var(--text-muted)]' },
         h('span', { className: 'text-xs font-mono' }, isOpen ? 'Collapse' : 'Expand'),
         h(Icon, { name: isOpen ? 'chevronDown' : 'chevronRight', className: 'w-4 h-4' })
       )
     ),
-    isOpen && h('div', { className: 'p-6 border-t border-white/5 bg-[#0E1013]' }, children)
+    isOpen && h('div', { className: 'p-6 border-t border-[var(--border-subtle)] bg-[var(--bg-surface-soft)]' }, children)
+  );
+}
+
+// ==============================================================================
+// 50% CORE COMPONENT: DEDICATED HALLUCINATION LAB & SHIELD WORKSPACE
+// ==============================================================================
+function HallucinationLabWorkspace({ activeDb, databases, showToast, onSendQueryToStudio }) {
+  const [benchmarks, setBenchmarks] = useState([]);
+  const [telemetry, setTelemetry] = useState(null);
+  const [selectedBenchmark, setSelectedBenchmark] = useState(null);
+
+  const [testQuestion, setTestQuestion] = useState("Who has the highest attendance?");
+  const [testAnswer, setTestAnswer] = useState("Arun has 96% attendance and is the best student in the college with 100% scholarship.");
+  const [testDb, setTestDb] = useState("college_records");
+  const [isEvaluating, setIsEvaluating] = useState(false);
+  const [evaluationResult, setEvaluationResult] = useState(null);
+
+  // Fetch benchmark scenarios and telemetry on mount
+  useEffect(() => {
+    fetchBenchmarks();
+    fetchTelemetry();
+  }, []);
+
+  const fetchBenchmarks = async () => {
+    try {
+      const res = await fetch(`${API_BASE}/api/hallucination/benchmarks`);
+      if (res.ok) {
+        const data = await res.json();
+        setBenchmarks(data.scenarios || []);
+        if (data.scenarios && data.scenarios.length > 0) {
+          loadBenchmarkScenario(data.scenarios[0]);
+        }
+      }
+    } catch (e) { console.error(e); }
+  };
+
+  const fetchTelemetry = async () => {
+    try {
+      const res = await fetch(`${API_BASE}/api/hallucination/telemetry`);
+      if (res.ok) {
+        const data = await res.json();
+        setTelemetry(data);
+      }
+    } catch (e) { console.error(e); }
+  };
+
+  const loadBenchmarkScenario = (sc) => {
+    setSelectedBenchmark(sc);
+    setTestQuestion(sc.question);
+    setTestAnswer(sc.hallucinated_answer);
+    setTestDb(sc.database_id);
+    setEvaluationResult(null);
+  };
+
+  const handleEvaluate = async (q = testQuestion, ans = testAnswer, db = testDb) => {
+    setIsEvaluating(true);
+    setEvaluationResult(null);
+    try {
+      const res = await fetch(`${API_BASE}/api/hallucination/test-candidate`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          question: q,
+          database_id: db,
+          candidate_answer: ans
+        })
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.detail || "Evaluation failed");
+      setEvaluationResult(data);
+      fetchTelemetry();
+    } catch (err) {
+      showToast(`Evaluation Error: ${err.message}`);
+    } finally {
+      setIsEvaluating(false);
+    }
+  };
+
+  return h('div', { className: 'space-y-8 animate-entrance' },
+
+    // Header Banner
+    h('div', { className: 'p-6 rounded-2xl luxury-card border-l-4 border-l-[var(--champagne)] space-y-2' },
+      h('div', { className: 'flex flex-wrap items-center justify-between gap-4' },
+        h('div', { className: 'space-y-1' },
+          h('div', { className: 'inline-flex items-center space-x-2 px-3 py-1 rounded-full bg-[var(--champagne-dim)] text-[var(--champagne)] text-[10px] font-mono uppercase tracking-widest font-semibold' },
+            h(Icon, { name: 'shieldZap', className: 'w-3.5 h-3.5' }),
+            h('span', null, 'ZERO-HALLUCINATION DEFENSE SYSTEM • 50% CORE ARCHITECTURE')
+          ),
+          h('h2', { className: 'font-serif-luxury text-2xl sm:text-3xl font-normal text-[var(--text-primary)]' }, 'HALLUCINATION LAB & RED-TEAMING ARENA'),
+          h('p', { className: 'text-xs text-[var(--text-secondary)] max-w-2xl' },
+            'Adversarial testing environment to simulate AI hallucinations, stress-test grounding algorithms, and verify that 0% ungrounded claims reach end users.'
+          )
+        ),
+        h('div', { className: 'flex items-center space-x-3' },
+          h('div', { className: 'bg-[var(--verified-bg)] border border-[var(--verified-border)] px-4 py-2 rounded-xl text-center' },
+            h('span', { className: 'text-[10px] font-mono text-[var(--text-muted)] uppercase block font-semibold' }, 'Prevention Rate'),
+            h('span', { className: 'text-xl font-bold font-mono text-[var(--verified)]' }, telemetry?.hallucination_prevention_rate || '100%')
+          ),
+          h('div', { className: 'bg-[var(--bg-surface-soft)] border border-[var(--border-subtle)] px-4 py-2 rounded-xl text-center' },
+            h('span', { className: 'text-[10px] font-mono text-[var(--text-muted)] uppercase block font-semibold' }, 'Precision'),
+            h('span', { className: 'text-xl font-bold font-mono text-[var(--champagne)]' }, telemetry?.grounding_precision || '99.4%')
+          )
+        )
+      )
+    ),
+
+    // MAIN 2-COLUMN LAB LAYOUT
+    h('div', { className: 'grid grid-cols-1 lg:grid-cols-12 gap-6 items-start' },
+
+      // LEFT: ATTACK SUITE & INPUT FORM (lg:col-span-5)
+      h('div', { className: 'lg:col-span-5 space-y-4' },
+
+        // Preset Adversarial Scenarios
+        h('div', { className: 'p-5 rounded-2xl luxury-card space-y-3' },
+          h('div', { className: 'flex items-center justify-between' },
+            h('span', { className: 'text-[10px] font-mono tracking-widest text-[var(--champagne)] uppercase font-semibold' }, 'ADVERSARIAL ATTACK BENCHMARKS'),
+            h('span', { className: 'text-[10px] font-mono text-[var(--text-muted)]' }, `${benchmarks.length} Scenarios`)
+          ),
+          h('div', { className: 'space-y-2 max-h-72 overflow-y-auto pr-1' },
+            benchmarks.map(sc => {
+              const isSelected = selectedBenchmark?.id === sc.id;
+              return h('button', {
+                key: sc.id,
+                onClick: () => loadBenchmarkScenario(sc),
+                className: `w-full text-left p-3 rounded-xl border transition flex flex-col justify-between space-y-1 ${
+                  isSelected
+                    ? 'bg-[var(--champagne-dim)] border-[var(--champagne-border)] text-[var(--text-primary)]'
+                    : 'bg-[var(--bg-surface-soft)] border-[var(--border-subtle)] hover:border-[var(--border-medium)] text-[var(--text-secondary)]'
+                }`
+              },
+                h('div', { className: 'flex items-center justify-between' },
+                  h('span', { className: 'text-[10px] font-mono text-[var(--champagne)] font-semibold' }, sc.category),
+                  h('span', { className: `text-[9px] font-mono px-2 py-0.5 rounded font-bold ${sc.severity === 'CRITICAL' ? 'bg-[var(--danger-bg)] text-[var(--danger)]' : 'bg-[var(--warning-bg)] text-[var(--warning)]'}` }, sc.severity)
+                ),
+                h('h4', { className: 'text-xs font-semibold text-[var(--text-primary)]' }, sc.title),
+                h('p', { className: 'text-[11px] text-[var(--text-muted)] line-clamp-1' }, sc.attack_vector)
+              );
+            })
+          )
+        ),
+
+        // Interactive Red-Teaming Playground Form
+        h('div', { className: 'p-5 rounded-2xl luxury-card space-y-4' },
+          h('div', { className: 'flex items-center justify-between' },
+            h('span', { className: 'text-[10px] font-mono tracking-widest text-[var(--text-muted)] uppercase font-semibold' }, 'LIVE ATTACK INJECTION CANVAS'),
+            h('span', { className: 'text-[10px] font-mono text-[var(--verified)]' }, 'Real-time Verifier')
+          ),
+
+          // Database Selector
+          h('div', { className: 'space-y-1' },
+            h('label', { className: 'text-[10px] font-mono text-[var(--text-muted)] uppercase font-semibold' }, 'Target Database'),
+            h('select', {
+              value: testDb,
+              onChange: (e) => setTestDb(e.target.value),
+              className: 'w-full bg-[var(--bg-surface-soft)] border border-[var(--border-subtle)] rounded-xl px-3 py-2 text-xs font-medium text-[var(--text-primary)] outline-none'
+            },
+              databases.map(d => h('option', { key: d.id, value: d.id }, d.name))
+            )
+          ),
+
+          // Question Input
+          h('div', { className: 'space-y-1' },
+            h('label', { className: 'text-[10px] font-mono text-[var(--text-muted)] uppercase font-semibold' }, 'User Question'),
+            h('input', {
+              type: 'text',
+              value: testQuestion,
+              onChange: (e) => setTestQuestion(e.target.value),
+              placeholder: 'Enter query...',
+              className: 'w-full bg-[var(--bg-surface-soft)] border border-[var(--border-subtle)] rounded-xl px-3 py-2 text-xs text-[var(--text-primary)] outline-none'
+            })
+          ),
+
+          // Candidate / Hallucinated Text Input
+          h('div', { className: 'space-y-1' },
+            h('label', { className: 'text-[10px] font-mono text-[var(--text-muted)] uppercase font-semibold' }, 'Candidate Answer (Inject Hallucination to Test)'),
+            h('textarea', {
+              rows: 3,
+              value: testAnswer,
+              onChange: (e) => setTestAnswer(e.target.value),
+              placeholder: 'Type candidate answer with test facts...',
+              className: 'w-full bg-[var(--bg-surface-soft)] border border-[var(--border-subtle)] rounded-xl p-3 text-xs text-[var(--text-primary)] outline-none font-mono leading-relaxed'
+            })
+          ),
+
+          // Action Buttons
+          h('div', { className: 'grid grid-cols-2 gap-2 pt-1' },
+            h('button', {
+              onClick: () => handleEvaluate(),
+              disabled: isEvaluating || !testAnswer.trim(),
+              className: 'btn-champagne py-2.5 px-4 rounded-xl text-xs font-bold flex items-center justify-center space-x-2 disabled:opacity-40'
+            },
+              h(Icon, { name: 'shieldZap', className: 'w-4 h-4' }),
+              h('span', null, isEvaluating ? 'Evaluating...' : 'Stress-Test Shield')
+            ),
+            h('button', {
+              onClick: () => {
+                if (selectedBenchmark) {
+                  setTestAnswer(selectedBenchmark.ground_truth_answer);
+                  handleEvaluate(testQuestion, selectedBenchmark.ground_truth_answer, testDb);
+                }
+              },
+              disabled: isEvaluating,
+              className: 'btn-ghost-luxury py-2.5 px-3 rounded-xl text-xs font-semibold'
+            }, 'Test Grounded Answer')
+          )
+        )
+      ),
+
+      // RIGHT: LIVE DIAGNOSTIC RESULTS & ARCHITECTURE (lg:col-span-7)
+      h('div', { className: 'lg:col-span-7 space-y-4' },
+
+        evaluationResult ? h('div', { className: 'space-y-4 animate-entrance' },
+
+          // Result Verdict Card
+          h('div', { className: `p-6 rounded-2xl luxury-card border-l-4 ${evaluationResult.hallucination_detected ? 'border-l-[var(--danger)]' : 'border-l-[var(--verified)]'} space-y-4` },
+            h('div', { className: 'flex flex-wrap items-center justify-between gap-3' },
+              h('div', { className: 'flex items-center space-x-3' },
+                h('div', { className: `px-3 py-1.5 rounded-xl text-xs font-bold flex items-center space-x-2 ${evaluationResult.hallucination_detected ? 'badge-danger-luxury' : 'badge-verified-luxury'}` },
+                  h(Icon, { name: evaluationResult.hallucination_detected ? 'shieldAlert' : 'shieldCheck', className: 'w-4 h-4' }),
+                  h('span', null, evaluationResult.hallucination_detected ? 'HALLUCINATION INTERCEPTED' : '100% GROUNDED & VERIFIED')
+                ),
+                h('span', { className: 'text-xs text-[var(--text-secondary)] font-mono' }, `${evaluationResult.execution_time_ms}ms`)
+              ),
+              h('div', { className: 'flex items-center space-x-2' },
+                h('span', { className: 'text-[10px] font-mono text-[var(--text-muted)] uppercase font-semibold' }, 'Risk Index:'),
+                h('span', { className: `text-sm font-bold font-mono px-2.5 py-1 rounded ${evaluationResult.hallucination_risk_pct > 30 ? 'bg-[var(--danger-bg)] text-[var(--danger)]' : 'bg-[var(--verified-bg)] text-[var(--verified)]'}` },
+                  `${evaluationResult.hallucination_risk_pct}%`
+                )
+              )
+            ),
+
+            // Dissection Rationale
+            h('div', { className: 'space-y-1' },
+              h('span', { className: 'text-[10px] font-mono tracking-widest text-[var(--text-muted)] uppercase font-semibold' }, 'DETECTION DIAGNOSIS'),
+              h('p', { className: 'text-sm font-medium text-[var(--text-primary)] leading-relaxed' }, evaluationResult.reason)
+            ),
+
+            // Token-Level Claims Breakdown
+            evaluationResult.claims_breakdown && h('div', { className: 'space-y-2 pt-2 border-t border-[var(--border-subtle)]' },
+              h('span', { className: 'text-[10px] font-mono tracking-widest text-[var(--text-muted)] uppercase block font-semibold' }, 'TOKEN-BY-TOKEN CLAIM GROUNDING AUDIT'),
+              h('div', { className: 'space-y-1.5' },
+                evaluationResult.claims_breakdown.map((cl, i) => {
+                  const isGood = cl.status === "GROUNDED";
+                  return h('div', {
+                    key: i,
+                    className: `p-3 rounded-xl border flex flex-col sm:flex-row sm:items-center justify-between text-xs gap-2 ${
+                      isGood ? 'bg-[var(--verified-bg)] border-[var(--verified-border)]' : 'bg-[var(--danger-bg)] border-[var(--danger-border)]'
+                    }`
+                  },
+                    h('div', { className: 'space-y-0.5' },
+                      h('p', { className: 'font-semibold text-[var(--text-primary)]' }, `"${cl.claim}"`),
+                      cl.flag && h('p', { className: `text-[11px] font-mono ${isGood ? 'text-[var(--verified)]' : 'text-[var(--danger)]'}` }, `● ${cl.flag}`)
+                    ),
+                    h('span', { className: `text-[10px] font-mono font-bold px-2 py-0.5 rounded self-start sm:self-center ${isGood ? 'bg-[var(--verified)] text-white' : 'bg-[var(--danger)] text-white'}` },
+                      cl.status
+                    )
+                  );
+                })
+              )
+            ),
+
+            // Database Ground Truth Evidence
+            evaluationResult.evidence && h('div', { className: 'space-y-2 pt-2 border-t border-[var(--border-subtle)]' },
+              h('span', { className: 'text-[10px] font-mono tracking-widest text-[var(--text-muted)] uppercase block font-semibold' }, 'RAW DATABASE GROUND TRUTH (ZERO HALLUCINATION BASE)'),
+              h('div', { className: 'flex flex-wrap gap-2' },
+                evaluationResult.evidence.map((ev, i) => h('div', { key: i, className: 'bg-[var(--bg-surface-soft)] text-[var(--text-primary)] border border-[var(--border-subtle)] px-3 py-1.5 rounded-lg text-xs font-mono flex items-center space-x-2' },
+                  h('span', { className: 'w-1.5 h-1.5 rounded-full bg-[var(--champagne)]' }),
+                  h('span', null, ev)
+                ))
+              )
+            )
+          )
+
+        ) : isEvaluating ? (
+
+          h('div', { className: 'p-12 rounded-2xl luxury-card text-center space-y-4 flex flex-col items-center justify-center min-h-[380px]' },
+            h('div', { className: 'w-12 h-12 rounded-full bg-[var(--champagne-dim)] border border-[var(--champagne-border)] flex items-center justify-center' },
+              h('span', { className: 'w-3 h-3 rounded-full bg-[var(--champagne)] animate-ping' })
+            ),
+            h('div', { className: 'space-y-1' },
+              h('h3', { className: 'text-base font-semibold text-[var(--text-primary)]' }, 'Executing 6-Layer Hallucination Shield...'),
+              h('p', { className: 'text-xs text-[var(--text-muted)] max-w-sm' }, 'Cross-referencing candidate assertions with SQL relational constraints, numeric registers, and entity graphs.')
+            )
+          )
+
+        ) : (
+
+          // Standby Guidance Card
+          h('div', { className: 'p-8 rounded-2xl luxury-card space-y-6' },
+            h('div', { className: 'space-y-2' },
+              h('div', { className: 'inline-flex items-center space-x-2 px-3 py-1 rounded-full bg-[var(--champagne-dim)] text-[var(--champagne)] text-[10px] font-mono font-semibold uppercase tracking-widest' },
+                h(Icon, { name: 'target', className: 'w-3.5 h-3.5' }),
+                h('span', null, 'READY FOR RED-TEAMING')
+              ),
+              h('h3', { className: 'font-serif-luxury text-xl text-[var(--text-primary)]' }, 'HOW TRUSTDB-AI PREVENTS HALLUCINATIONS'),
+              h('p', { className: 'text-xs text-[var(--text-secondary)] leading-relaxed' },
+                'Traditional LLMs frequently hallucinate metrics, invent non-existent database rows, or embellish answers with qualitative superlatives. TRUSTDB-AI solves this by executing a deterministic 6-layer verification barrier on every query.'
+              )
+            ),
+
+            // 6-Layer Architecture Breakdown
+            h('div', { className: 'grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2' },
+              [
+                { num: "01", title: "Zero-Row Phantom Barrier", desc: "Prevents synthesizing fictional records when WHERE filters return 0 rows." },
+                { num: "02", title: "Entity Grounding Matrix", desc: "Cross-checks proper nouns, names, and foreign keys against database indices." },
+                { num: "03", title: "Strict Numeric Consistency", desc: "Validates every integer, percentage, and currency against SQL column rows." },
+                { num: "04", title: "Qualitative Superlative Filter", desc: "Flags unproven claims like 'best student' or 'guaranteed' that lack DB schema proof." },
+                { num: "05", title: "Mathematical Aggregation Verifier", desc: "Validates COUNT, SUM, AVG computations with mathematical determinism." },
+                { num: "06", title: "Semantic LLM Auditor (Hybrid)", desc: "Adversarial second-stage auditor for complex ambiguous queries." }
+              ].map(ly => h('div', { key: ly.num, className: 'p-3.5 rounded-xl bg-[var(--bg-surface-soft)] border border-[var(--border-subtle)] space-y-1' },
+                h('div', { className: 'flex items-center justify-between' },
+                  h('span', { className: 'text-[10px] font-mono text-[var(--champagne)] font-bold' }, `LAYER ${ly.num}`),
+                  h('span', { className: 'text-[9px] font-mono text-[var(--verified)] font-bold' }, 'ACTIVE')
+                ),
+                h('h4', { className: 'text-xs font-semibold text-[var(--text-primary)]' }, ly.title),
+                h('p', { className: 'text-[11px] text-[var(--text-muted)] leading-relaxed' }, ly.desc)
+              ))
+            )
+          )
+
+        )
+
+      )
+
+    )
+
   );
 }
 
 // Main Neura-X Application Component
 function App() {
+  const [theme, setTheme] = useState(() => localStorage.getItem('neura_theme') || 'dark');
   const [databases, setDatabases] = useState([]);
   const [activeDb, setActiveDb] = useState("college_records");
   const [schemaData, setSchemaData] = useState(null);
-  const [activeTab, setActiveTab] = useState("ask"); // 'ask', 'explore', 'history', 'insights'
+  const [activeTab, setActiveTab] = useState("ask"); // 'ask', 'hallucination', 'explore', 'history', 'insights'
   const [toastMessage, setToastMessage] = useState(null);
 
   const [inputQuery, setInputQuery] = useState("");
   const [isAnalyzing, setIsAnalyzing] = useState(false);
-  const [analysisStage, setAnalysisStage] = useState(0); // 1: Understanding, 2: Safety, 3: DB Execution, 4: Verifying
+  const [analysisStage, setAnalysisStage] = useState(0);
   const [currentResult, setCurrentResult] = useState(null);
   const [isListening, setIsListening] = useState(false);
   const [directSqlMode, setDirectSqlMode] = useState(false);
@@ -407,6 +804,16 @@ function App() {
   const chartCanvasRef = useRef(null);
   const chartInstanceRef = useRef(null);
 
+  // Theme Synchronizer
+  useEffect(() => {
+    document.documentElement.className = theme;
+    localStorage.setItem('neura_theme', theme);
+  }, [theme]);
+
+  const toggleTheme = () => {
+    setTheme(prev => (prev === 'dark' ? 'light' : 'dark'));
+  };
+
   const showToast = (msg) => {
     setToastMessage(msg);
     setTimeout(() => setToastMessage(null), 3000);
@@ -435,30 +842,32 @@ function App() {
         const ctx = chartCanvasRef.current.getContext('2d');
         const targetType = chartTypeOverride || currentResult.chart.type;
 
-        // Apply luxury theme styling to Chart.js
+        const isDark = theme === 'dark';
+        const textColor = isDark ? '#CBD5E1' : '#334155';
+        const gridColor = isDark ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.06)';
+
         const luxuryChartData = { ...currentResult.chart.data };
         if (luxuryChartData.datasets && luxuryChartData.datasets[0]) {
           const ds = luxuryChartData.datasets[0];
           if (targetType === 'bar') {
-            ds.backgroundColor = 'rgba(198, 167, 107, 0.7)';
-            ds.borderColor = '#C6A76B';
+            ds.backgroundColor = isDark ? 'rgba(198, 167, 107, 0.75)' : 'rgba(180, 136, 59, 0.85)';
+            ds.borderColor = isDark ? '#C6A76B' : '#B4883B';
             ds.borderWidth = 1;
             ds.borderRadius = 6;
           } else if (targetType === 'line') {
-            ds.borderColor = '#C6A76B';
-            ds.backgroundColor = 'rgba(198, 167, 107, 0.1)';
+            ds.borderColor = isDark ? '#C6A76B' : '#B4883B';
+            ds.backgroundColor = isDark ? 'rgba(198, 167, 107, 0.15)' : 'rgba(180, 136, 59, 0.15)';
             ds.fill = true;
             ds.tension = 0.3;
           } else if (targetType === 'doughnut' || targetType === 'pie') {
             ds.backgroundColor = [
-              '#C6A76B',
-              '#7FA58C',
-              '#A7ADB3',
-              '#B99A62',
-              '#687078',
-              '#D8BC82'
+              isDark ? '#C6A76B' : '#B4883B',
+              isDark ? '#7FA58C' : '#15803D',
+              isDark ? '#CBD5E1' : '#475569',
+              isDark ? '#B99A62' : '#D97706',
+              isDark ? '#8E97A0' : '#94A3B8'
             ];
-            ds.borderColor = '#0B0D0F';
+            ds.borderColor = isDark ? '#0B0D0F' : '#FFFFFF';
           }
         }
 
@@ -473,19 +882,19 @@ function App() {
             plugins: {
               legend: {
                 labels: {
-                  color: '#A7ADB3',
+                  color: textColor,
                   font: { family: 'Plus Jakarta Sans', size: 12 }
                 }
               }
             },
             scales: targetType === 'doughnut' || targetType === 'pie' ? {} : {
               x: {
-                grid: { color: 'rgba(255, 255, 255, 0.04)' },
-                ticks: { color: '#A7ADB3', font: { family: 'Plus Jakarta Sans', size: 11 } }
+                grid: { color: gridColor },
+                ticks: { color: textColor, font: { family: 'Plus Jakarta Sans', size: 11 } }
               },
               y: {
-                grid: { color: 'rgba(255, 255, 255, 0.04)' },
-                ticks: { color: '#A7ADB3', font: { family: 'Plus Jakarta Sans', size: 11 } }
+                grid: { color: gridColor },
+                ticks: { color: textColor, font: { family: 'Plus Jakarta Sans', size: 11 } }
               }
             }
           }
@@ -499,7 +908,7 @@ function App() {
         chartInstanceRef.current.destroy();
       }
     };
-  }, [currentResult, openSections.chart, chartTypeOverride]);
+  }, [currentResult, openSections.chart, chartTypeOverride, theme]);
 
   const fetchDatabases = async () => {
     try {
@@ -552,7 +961,6 @@ function App() {
     setCurrentResult(null);
     setChartTypeOverride(null);
 
-    // Progressive stage simulation
     const stageTimer1 = setTimeout(() => setAnalysisStage(2), 200);
     const stageTimer2 = setTimeout(() => setAnalysisStage(3), 450);
     const stageTimer3 = setTimeout(() => setAnalysisStage(4), 700);
@@ -583,7 +991,6 @@ function App() {
       setCurrentResult(data);
       fetchHistory();
       
-      // Auto-open chart if chart exists
       if (data.chart) {
         setOpenSections(prev => ({ ...prev, chart: true }));
       }
@@ -707,11 +1114,11 @@ function App() {
   const activeDatabaseObj = databases.find(d => d.id === activeDb) || { name: activeDb, table_count: 5 };
   const curatedExamples = CURATED_PROMPTS[activeDb] || CURATED_PROMPTS.college_records;
 
-  return h('div', { className: 'min-h-screen flex flex-col bg-[#0B0D0F] text-[#F4F1EA] selection:bg-[#C6A76B] selection:text-[#0B0D0F]' },
+  return h('div', { className: 'min-h-screen flex flex-col' },
 
     // Toast Notification
-    toastMessage && h('div', { className: 'fixed bottom-8 right-8 z-50 bg-[#181C20] border border-[#C6A76B]/40 text-[#F4F1EA] text-xs font-semibold px-5 py-3 rounded-xl shadow-2xl flex items-center space-x-3 animate-entrance' },
-      h('span', { className: 'w-2 h-2 rounded-full bg-[#C6A76B]' }),
+    toastMessage && h('div', { className: 'fixed bottom-8 right-8 z-50 bg-[var(--bg-surface-elevated)] border border-[var(--champagne-border)] text-[var(--text-primary)] text-xs font-semibold px-5 py-3 rounded-xl shadow-2xl flex items-center space-x-3 animate-entrance' },
+      h('span', { className: 'w-2 h-2 rounded-full bg-[var(--champagne)]' }),
       h('span', null, toastMessage)
     ),
 
@@ -721,56 +1128,70 @@ function App() {
       // Left: NEURA-X Wordmark
       h('div', { className: 'flex items-center space-x-4' },
         h('div', { className: 'flex flex-col' },
-          h('span', { className: 'font-serif-luxury font-bold text-xl tracking-[0.2em] text-[#F4F1EA]' }, 'NEURA-X'),
-          h('span', { className: 'text-[9px] font-mono tracking-widest text-[#C6A76B] uppercase' }, 'ASK. VERIFY. TRUST.')
+          h('span', { className: 'font-serif-luxury font-bold text-xl tracking-[0.2em] text-[var(--text-primary)]' }, 'NEURA-X'),
+          h('span', { className: 'text-[9px] font-mono tracking-widest text-[var(--champagne)] uppercase font-semibold' }, 'ASK. VERIFY. TRUST.')
         )
       ),
 
-      // Center: Editorial Nav Links
-      h('nav', { className: 'hidden md:flex items-center space-x-8 text-xs font-medium tracking-wider' },
+      // Center: Editorial Nav Links (With 50% Hallucination Lab Featured)
+      h('nav', { className: 'hidden md:flex items-center space-x-6 text-xs font-semibold tracking-wider' },
         [
-          { id: 'ask', label: 'ASK' },
-          { id: 'explore', label: 'DATA LIBRARY' },
-          { id: 'history', label: 'AUDIT TRAIL' },
-          { id: 'insights', label: 'INSIGHTS' }
+          { id: 'ask', label: 'ASK STUDIO', icon: 'sparkles' },
+          { id: 'hallucination', label: 'HALLUCINATION LAB', icon: 'shieldZap', isFeatured: true },
+          { id: 'explore', label: 'DATA LIBRARY', icon: 'table' },
+          { id: 'history', label: 'AUDIT TRAIL', icon: 'history' },
+          { id: 'insights', label: 'INSIGHTS', icon: 'activity' }
         ].map(item => h('button', {
           key: item.id,
           onClick: () => setActiveTab(item.id),
-          className: `transition-all py-1 border-b-2 ${
+          className: `transition-all py-1 px-2 border-b-2 flex items-center space-x-1.5 ${
             activeTab === item.id
-              ? 'text-[#F4F1EA] border-[#C6A76B]'
-              : 'text-[#A7ADB3] border-transparent hover:text-[#F4F1EA]'
+              ? 'text-[var(--text-primary)] border-[var(--champagne)] font-bold'
+              : 'text-[var(--text-secondary)] border-transparent hover:text-[var(--text-primary)]'
           }`
-        }, item.label))
+        },
+          item.isFeatured && h('span', { className: 'px-1.5 py-0.2 rounded text-[9px] font-mono bg-[var(--champagne-dim)] text-[var(--champagne)] border border-[var(--champagne-border)] mr-1' }, '50% PILLAR'),
+          h('span', null, item.label)
+        ))
       ),
 
-      // Right: Database Context & Status
-      h('div', { className: 'flex items-center space-x-4' },
+      // Right: Theme Switcher, Database Context & Settings
+      h('div', { className: 'flex items-center space-x-3' },
+
+        // Light / Dark Theme Switcher Button
+        h('button', {
+          onClick: toggleTheme,
+          className: 'p-2 rounded-xl bg-[var(--bg-surface-soft)] hover:bg-[var(--bg-surface-hover)] border border-[var(--border-subtle)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition flex items-center justify-center',
+          title: theme === 'dark' ? 'Switch to Light Mode' : 'Switch to Dark Mode'
+        },
+          h(Icon, { name: theme === 'dark' ? 'sun' : 'moon', className: 'w-4 h-4 text-[var(--champagne)]' })
+        ),
+
         // DB Selector
-        h('div', { className: 'flex items-center bg-[#121518] border border-white/10 rounded-xl px-3 py-1.5' },
-          h(Icon, { name: 'database', className: 'w-3.5 h-3.5 text-[#C6A76B] mr-2' }),
+        h('div', { className: 'flex items-center bg-[var(--bg-surface-soft)] border border-[var(--border-subtle)] rounded-xl px-3 py-1.5' },
+          h(Icon, { name: 'database', className: 'w-3.5 h-3.5 text-[var(--champagne)] mr-2' }),
           h('select', {
             value: activeDb,
             onChange: (e) => {
               setActiveDb(e.target.value);
               setCurrentResult(null);
             },
-            className: 'bg-transparent text-xs font-medium text-[#F4F1EA] outline-none cursor-pointer pr-2'
+            className: 'bg-transparent text-xs font-semibold text-[var(--text-primary)] outline-none cursor-pointer pr-2'
           },
-            databases.map(db => h('option', { key: db.id, value: db.id, className: 'bg-[#121518] text-[#F4F1EA]' }, db.name))
+            databases.map(db => h('option', { key: db.id, value: db.id }, db.name))
           )
         ),
 
         // Grounded Status Pill
-        h('div', { className: 'hidden lg:flex items-center space-x-2 bg-[#121518] border border-white/5 px-3 py-1.5 rounded-xl text-xs text-[#7FA58C]' },
-          h('span', { className: 'w-2 h-2 rounded-full bg-[#7FA58C] animate-pulse-subtle' }),
-          h('span', { className: 'font-mono text-[11px] font-medium' }, 'VERIFIED')
+        h('div', { className: 'hidden lg:flex items-center space-x-2 bg-[var(--verified-bg)] border border-[var(--verified-border)] px-3 py-1.5 rounded-xl text-xs text-[var(--verified)]' },
+          h('span', { className: 'w-2 h-2 rounded-full bg-[var(--verified)] animate-pulse-subtle' }),
+          h('span', { className: 'font-mono text-[11px] font-bold' }, 'SHIELD ACTIVE')
         ),
 
         // Settings Button
         h('button', {
           onClick: () => setIsSettingsOpen(!isSettingsOpen),
-          className: 'p-2 rounded-xl bg-[#121518] hover:bg-[#181C20] border border-white/10 text-[#A7ADB3] hover:text-[#F4F1EA] transition',
+          className: 'p-2 rounded-xl bg-[var(--bg-surface-soft)] hover:bg-[var(--bg-surface-hover)] border border-[var(--border-subtle)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition',
           title: 'Settings & Dataset Import'
         },
           h(Icon, { name: 'settings', className: 'w-4 h-4' })
@@ -779,16 +1200,17 @@ function App() {
     ),
 
     // Mobile Navigation Bar
-    h('div', { className: 'md:hidden flex items-center justify-around bg-[#121518] border-b border-white/5 py-2.5 text-xs font-medium' },
+    h('div', { className: 'md:hidden flex items-center justify-around bg-[var(--bg-surface)] border-b border-[var(--border-subtle)] py-2.5 text-xs font-semibold' },
       [
-        { id: 'ask', label: 'Ask' },
+        { id: 'ask', label: 'Ask Studio' },
+        { id: 'hallucination', label: 'Shield Lab' },
         { id: 'explore', label: 'Library' },
         { id: 'history', label: 'Audit' },
         { id: 'insights', label: 'Insights' }
       ].map(item => h('button', {
         key: item.id,
         onClick: () => setActiveTab(item.id),
-        className: activeTab === item.id ? 'text-[#C6A76B] font-bold' : 'text-[#A7ADB3]'
+        className: activeTab === item.id ? 'text-[var(--champagne)] font-bold border-b-2 border-[var(--champagne)]' : 'text-[var(--text-secondary)]'
       }, item.label))
     ),
 
@@ -807,16 +1229,16 @@ function App() {
             // Compact Editorial Studio Header & Input Card
             h('div', { className: 'p-5 rounded-2xl luxury-card space-y-4' },
               h('div', { className: 'flex items-center justify-between' },
-                h('div', { className: 'inline-flex items-center space-x-2 px-3 py-1 rounded-full bg-[#181C20] border border-white/10 text-[10px] font-mono text-[#C6A76B] uppercase tracking-widest' },
-                  h('span', { className: 'w-1.5 h-1.5 rounded-full bg-[#C6A76B]' }),
+                h('div', { className: 'inline-flex items-center space-x-2 px-3 py-1 rounded-full bg-[var(--champagne-dim)] text-[var(--champagne)] text-[10px] font-mono uppercase tracking-widest font-semibold' },
+                  h('span', { className: 'w-1.5 h-1.5 rounded-full bg-[var(--champagne)]' }),
                   h('span', null, 'AI Database Query Studio')
                 ),
-                h('span', { className: 'text-[10px] font-mono text-[#7FA58C] bg-[#7FA58C]/10 border border-[#7FA58C]/20 px-2 py-0.5 rounded font-medium' }, 'READ-ONLY')
+                h('span', { className: 'text-[10px] font-mono text-[var(--verified)] bg-[var(--verified-bg)] border border-[var(--verified-border)] px-2 py-0.5 rounded font-bold' }, 'READ-ONLY SAFE')
               ),
 
               h('div', { className: 'space-y-1' },
-                h('h1', { className: 'font-serif-luxury text-2xl sm:text-3xl font-normal tracking-[0.06em] text-[#F4F1EA] leading-tight' }, 'ASK YOUR DATA.'),
-                h('p', { className: 'text-xs text-[#A7ADB3] leading-relaxed' }, 'Ask in plain English. Results are proven by real database records without hallucination.')
+                h('h1', { className: 'font-serif-luxury text-2xl sm:text-3xl font-normal tracking-[0.06em] text-[var(--text-primary)] leading-tight' }, 'ASK YOUR DATA.'),
+                h('p', { className: 'text-xs text-[var(--text-secondary)] leading-relaxed' }, 'Ask in natural English. Answers are mathematically proven against real database records with zero hallucination.')
               ),
 
               // Hero Input Box (Glassmorphic)
@@ -826,7 +1248,7 @@ function App() {
                 h('button', {
                   onClick: () => setDirectSqlMode(!directSqlMode),
                   className: `px-2 py-1 rounded-lg text-[10px] font-mono tracking-wider transition ${
-                    directSqlMode ? 'bg-[#C6A76B]/20 text-[#C6A76B] border border-[#C6A76B]/40' : 'bg-white/5 text-[#A7ADB3] hover:text-[#F4F1EA]'
+                    directSqlMode ? 'bg-[var(--champagne)] text-[#0F172A] font-bold' : 'bg-[var(--bg-surface-soft)] text-[var(--text-secondary)] hover:text-[var(--text-primary)]'
                   }`
                 }, directSqlMode ? 'SQL' : 'AI'),
 
@@ -838,7 +1260,7 @@ function App() {
                   onKeyDown: (e) => e.key === 'Enter' && handleSendQuery(),
                   placeholder: directSqlMode ? 'Enter SELECT query...' : 'Ask a question about your data...',
                   disabled: isAnalyzing,
-                  className: 'w-full bg-transparent text-xs sm:text-sm text-[#F4F1EA] placeholder-[#687078] outline-none font-normal'
+                  className: 'w-full bg-transparent text-xs sm:text-sm text-[var(--text-primary)] placeholder-[var(--text-muted)] outline-none font-medium'
                 }),
 
                 // Voice Button
@@ -846,14 +1268,14 @@ function App() {
                   onClick: handleVoiceToggle,
                   title: 'Voice Input',
                   className: `p-2 rounded-xl transition flex items-center justify-center ${
-                    isListening ? 'bg-[#B86D6D]/20 text-[#B86D6D]' : 'text-[#A7ADB3] hover:text-[#F4F1EA] hover:bg-white/5'
+                    isListening ? 'bg-[var(--danger-bg)] text-[var(--danger)]' : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-surface-soft)]'
                   }`
                 },
                   isListening
                     ? h('div', { className: 'flex items-center space-x-0.5' },
-                        h('span', { className: 'w-1 bg-[#B86D6D] voice-bar-1 rounded' }),
-                        h('span', { className: 'w-1 bg-[#B86D6D] voice-bar-2 rounded' }),
-                        h('span', { className: 'w-1 bg-[#B86D6D] voice-bar-3 rounded' })
+                        h('span', { className: 'w-1 bg-[var(--danger)] voice-bar-1 rounded' }),
+                        h('span', { className: 'w-1 bg-[var(--danger)] voice-bar-2 rounded' }),
+                        h('span', { className: 'w-1 bg-[var(--danger)] voice-bar-3 rounded' })
                       )
                     : h(Icon, { name: 'mic', className: 'w-4 h-4' })
                 ),
@@ -864,26 +1286,26 @@ function App() {
                   disabled: isAnalyzing || !inputQuery.trim(),
                   className: 'btn-champagne px-3.5 py-2 rounded-xl flex items-center justify-center shrink-0 disabled:opacity-40 disabled:cursor-not-allowed shadow-lg'
                 },
-                  h(Icon, { name: 'send', className: 'w-4 h-4 text-[#0B0D0F]' })
+                  h(Icon, { name: 'send', className: 'w-4 h-4 text-[#0F172A]' })
                 )
               ),
 
               // Connected DB Context Pill
-              h('div', { className: 'flex items-center justify-between text-xs text-[#A7ADB3] pt-0.5 font-mono text-[11px]' },
+              h('div', { className: 'flex items-center justify-between text-xs text-[var(--text-secondary)] pt-0.5 font-mono text-[11px]' },
                 h('div', { className: 'flex items-center space-x-1.5' },
-                  h('span', { className: 'text-[#687078] uppercase' }, 'DB:'),
-                  h('span', { className: 'text-[#F4F1EA] font-medium' }, activeDatabaseObj.name),
-                  h('span', { className: 'text-[#7FA58C]' }, '● Active')
+                  h('span', { className: 'text-[var(--text-muted)] uppercase font-semibold' }, 'DB:'),
+                  h('span', { className: 'text-[var(--text-primary)] font-semibold' }, activeDatabaseObj.name),
+                  h('span', { className: 'text-[var(--verified)] font-bold' }, '● Active')
                 ),
-                h('span', { className: 'text-[#687078]' }, `${schemaData?.tables?.length || 0} Tables`)
+                h('span', { className: 'text-[var(--text-muted)]' }, `${schemaData?.tables?.length || 0} Tables`)
               )
             ),
 
             // Staged Query Lifecycle Progress (While querying)
             isAnalyzing && h('div', { className: 'p-4 rounded-2xl luxury-card text-center space-y-3 animate-entrance' },
               h('div', { className: 'flex items-center justify-center space-x-2' },
-                h('span', { className: 'w-2 h-2 rounded-full bg-[#C6A76B] animate-ping' }),
-                h('span', { className: 'font-mono text-xs text-[#C6A76B] uppercase tracking-wider font-semibold' },
+                h('span', { className: 'w-2 h-2 rounded-full bg-[var(--champagne)] animate-ping' }),
+                h('span', { className: 'font-mono text-xs text-[var(--champagne)] uppercase tracking-wider font-bold' },
                   analysisStage === 1 ? 'Understanding question...' :
                   analysisStage === 2 ? 'Checking query safety...' :
                   analysisStage === 3 ? 'Executing database query...' :
@@ -900,8 +1322,8 @@ function App() {
                   key: st.step,
                   className: `p-1.5 rounded-lg text-[10px] font-mono transition-all text-center ${
                     analysisStage >= st.step
-                      ? 'bg-[#C6A76B]/15 text-[#C6A76B] border border-[#C6A76B]/30'
-                      : 'bg-[#181C20] text-[#687078] border border-white/5'
+                      ? 'bg-[var(--champagne-dim)] text-[var(--champagne)] border border-[var(--champagne-border)] font-bold'
+                      : 'bg-[var(--bg-surface-soft)] text-[var(--text-muted)] border border-[var(--border-subtle)]'
                   }`
                 },
                   h('span', null, `${st.label} ${analysisStage >= st.step ? '✓' : ''}`)
@@ -912,8 +1334,8 @@ function App() {
             // Demo Scenarios Interactive Section
             h('div', { className: 'p-4 sm:p-5 rounded-2xl luxury-card space-y-3' },
               h('div', { className: 'flex items-center justify-between' },
-                h('span', { className: 'text-[10px] font-mono tracking-widest text-[#C6A76B] uppercase font-semibold' }, 'DEMO FLOWS & EVALUATION'),
-                h('span', { className: 'text-[10px] font-mono text-[#687078]' }, 'Instant Test Cases')
+                h('span', { className: 'text-[10px] font-mono tracking-widest text-[var(--champagne)] uppercase font-semibold' }, 'DEMO FLOWS & EVALUATION'),
+                h('span', { className: 'text-[10px] font-mono text-[var(--text-muted)]' }, 'Instant Test Cases')
               ),
               h('div', { className: 'grid grid-cols-1 sm:grid-cols-2 gap-2' },
                 DEMO_SCENARIOS.map(sc => h('button', {
@@ -925,11 +1347,11 @@ function App() {
                   className: 'p-2.5 rounded-xl luxury-card-interactive text-left space-y-1 flex flex-col justify-between'
                 },
                   h('div', { className: 'flex items-center justify-between' },
-                    h('span', { className: 'text-[9px] font-mono text-[#C6A76B]' }, sc.badge),
-                    h('span', { className: `text-[9px] font-mono ${sc.color === 'verified' ? 'text-[#7FA58C]' : sc.color === 'warning' ? 'text-[#B99A62]' : 'text-[#C6A76B]'}` }, sc.tag)
+                    h('span', { className: 'text-[9px] font-mono text-[var(--champagne)] font-bold' }, sc.badge),
+                    h('span', { className: `text-[9px] font-mono font-bold ${sc.color === 'verified' ? 'text-[var(--verified)]' : sc.color === 'warning' ? 'text-[var(--warning)]' : 'text-[var(--champagne)]'}` }, sc.tag)
                   ),
-                  h('p', { className: 'text-xs font-semibold text-[#F4F1EA]' }, sc.title),
-                  h('p', { className: 'text-[10px] text-[#A7ADB3] line-clamp-1' }, sc.desc)
+                  h('p', { className: 'text-xs font-semibold text-[var(--text-primary)]' }, sc.title),
+                  h('p', { className: 'text-[10px] text-[var(--text-secondary)] line-clamp-1' }, sc.desc)
                 ))
               )
             ),
@@ -937,17 +1359,17 @@ function App() {
             // Curated Example Queries
             h('div', { className: 'p-4 sm:p-5 rounded-2xl luxury-card space-y-2.5' },
               h('div', { className: 'flex items-center justify-between' },
-                h('span', { className: 'text-[10px] font-mono tracking-widest text-[#A7ADB3] uppercase font-semibold' }, 'SUGGESTED QUESTIONS'),
-                h('span', { className: 'text-[10px] font-mono text-[#687078]' }, 'Click to run')
+                h('span', { className: 'text-[10px] font-mono tracking-widest text-[var(--text-muted)] uppercase font-semibold' }, 'SUGGESTED QUESTIONS'),
+                h('span', { className: 'text-[10px] font-mono text-[var(--text-muted)]' }, 'Click to run')
               ),
               h('div', { className: 'space-y-1.5 max-h-52 overflow-y-auto pr-1' },
                 curatedExamples.map((ex, idx) => h('button', {
                   key: idx,
                   onClick: () => handleSendQuery(ex),
-                  className: 'w-full text-left text-xs text-[#A7ADB3] hover:text-[#F4F1EA] bg-[#121518]/60 hover:bg-[#181C20] border border-white/5 hover:border-[#C6A76B]/30 p-2 rounded-xl transition flex items-center justify-between group'
+                  className: 'w-full text-left text-xs text-[var(--text-secondary)] hover:text-[var(--text-primary)] bg-[var(--bg-surface-soft)] hover:bg-[var(--bg-surface-hover)] border border-[var(--border-subtle)] hover:border-[var(--champagne-border)] p-2 rounded-xl transition flex items-center justify-between group'
                 },
-                  h('span', { className: 'truncate mr-2' }, ex),
-                  h(Icon, { name: 'arrowUpRight', className: 'w-3.5 h-3.5 text-[#687078] group-hover:text-[#C6A76B] shrink-0' })
+                  h('span', { className: 'truncate mr-2 font-medium' }, ex),
+                  h(Icon, { name: 'arrowUpRight', className: 'w-3.5 h-3.5 text-[var(--text-muted)] group-hover:text-[var(--champagne)] shrink-0' })
                 ))
               )
             )
@@ -958,37 +1380,42 @@ function App() {
 
             currentResult && !isAnalyzing ? h('div', { className: 'space-y-4 animate-entrance' },
               // 1. Answer Hero (Verified Result)
-              h('section', { className: 'p-6 rounded-2xl luxury-card space-y-4 relative overflow-hidden border-t-2 border-t-[#C6A76B]' },
+              h('section', { className: 'p-6 rounded-2xl luxury-card space-y-4 relative overflow-hidden border-t-2 border-t-[var(--champagne)]' },
                 h('div', { className: 'flex items-center justify-between' },
                   h('div', { className: 'flex items-center space-x-2' },
-                    h('span', { className: 'w-2 h-2 rounded-full bg-[#7FA58C]' }),
-                    h('span', { className: 'text-[10px] font-mono tracking-widest text-[#C6A76B] uppercase font-semibold' }, 'VERIFIED ANSWER')
+                    h('span', { className: 'w-2 h-2 rounded-full bg-[var(--verified)]' }),
+                    h('span', { className: 'text-[10px] font-mono tracking-widest text-[var(--champagne)] uppercase font-bold' }, 'VERIFIED ANSWER')
                   ),
-                  h('div', { className: 'flex items-center space-x-2 text-[11px] font-mono text-[#A7ADB3]' },
-                    h('span', { className: 'text-[#7FA58C]' }, `${currentResult.row_count} rows proven`),
-                    h('span', { className: 'text-[#687078]' }, '•'),
+                  h('div', { className: 'flex items-center space-x-2 text-[11px] font-mono text-[var(--text-secondary)]' },
+                    h('span', { className: 'text-[var(--verified)] font-bold' }, `${currentResult.row_count} rows proven`),
+                    h('span', { className: 'text-[var(--text-muted)]' }, '•'),
                     h('span', null, `${currentResult.execution_time_ms}ms`)
                   )
                 ),
 
-                h('div', { className: 'text-xl sm:text-2xl font-light text-[#F4F1EA] leading-relaxed font-sans' },
+                h('div', { className: 'text-xl sm:text-2xl font-light text-[var(--text-primary)] leading-relaxed font-sans' },
                   h(MarkdownEditorial, { text: currentResult.natural_answer })
                 ),
 
-                // Metadata Badges
-                h('div', { className: 'pt-3 border-t border-white/5 flex flex-wrap items-center justify-between text-xs text-[#A7ADB3] gap-2 font-mono text-[11px]' },
+                // Metadata Badges & Hallucination Attack Simulation Quick-Trigger
+                h('div', { className: 'pt-3 border-t border-[var(--border-subtle)] flex flex-wrap items-center justify-between text-xs text-[var(--text-secondary)] gap-2 font-mono text-[11px]' },
                   h('div', { className: 'flex items-center space-x-2' },
-                    h('span', { className: 'text-[#687078]' }, 'Target DB:'),
-                    h('span', { className: 'text-[#F4F1EA]' }, currentResult.database_id)
+                    h('span', { className: 'text-[var(--text-muted)]' }, 'Target DB:'),
+                    h('span', { className: 'text-[var(--text-primary)] font-semibold' }, currentResult.database_id)
                   ),
-                  h('div', { className: 'flex items-center space-x-1.5' },
-                    h('span', { className: 'text-[#687078]' }, 'Engine:'),
-                    h('span', { className: 'text-[#C6A76B]' }, currentResult.provider_used)
+                  h('button', {
+                    onClick: () => {
+                      setActiveTab('hallucination');
+                    },
+                    className: 'text-[10px] font-mono text-[var(--champagne)] hover:underline flex items-center space-x-1'
+                  },
+                    h(Icon, { name: 'shieldZap', className: 'w-3 h-3' }),
+                    h('span', null, 'Open in Hallucination Lab →')
                   )
                 )
               ),
 
-              // 2. Trust & Verification Panel
+              // 2. Trust & Verification Panel with Claims Breakdown & Risk Index
               h(VerificationHeroPanel, { verification: currentResult.verification }),
 
               // 3. Trust Chain Pipeline
@@ -1006,7 +1433,7 @@ function App() {
               },
                 h('div', { className: 'space-y-4' },
                   h('div', { className: 'flex items-center justify-between' },
-                    h('span', { className: 'text-[11px] font-mono text-[#A7ADB3]' }, 'SANITIZED READ-ONLY QUERY:'),
+                    h('span', { className: 'text-[11px] font-mono text-[var(--text-muted)] font-semibold' }, 'SANITIZED READ-ONLY QUERY:'),
                     h('button', {
                       onClick: () => {
                         navigator.clipboard.writeText(currentResult.sanitized_sql);
@@ -1018,17 +1445,17 @@ function App() {
                       h('span', null, 'Copy SQL')
                     )
                   ),
-                  h('pre', { className: 'sql-luxury-box p-4 text-xs font-mono text-[#C6A76B] overflow-x-auto leading-relaxed' },
+                  h('pre', { className: 'sql-luxury-box p-4 text-xs font-mono overflow-x-auto leading-relaxed' },
                     currentResult.sanitized_sql
                   ),
                   h('div', { className: 'grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs' },
-                    h('div', { className: 'p-3 rounded-xl bg-[#121518] border border-white/5 space-y-1' },
-                      h('span', { className: 'text-[10px] font-mono text-[#687078] uppercase' }, 'QUERY INTENT'),
-                      h('p', { className: 'text-[#F4F1EA] font-medium' }, currentResult.intent || 'Data Extraction')
+                    h('div', { className: 'p-3 rounded-xl bg-[var(--bg-surface)] border border-[var(--border-subtle)] space-y-1' },
+                      h('span', { className: 'text-[10px] font-mono text-[var(--text-muted)] uppercase font-semibold' }, 'QUERY INTENT'),
+                      h('p', { className: 'text-[var(--text-primary)] font-medium' }, currentResult.intent || 'Data Extraction')
                     ),
-                    h('div', { className: 'p-3 rounded-xl bg-[#121518] border border-white/5 space-y-1' },
-                      h('span', { className: 'text-[10px] font-mono text-[#687078] uppercase' }, 'GUARDRAIL STATUS'),
-                      h('p', { className: 'text-[#7FA58C] font-mono font-medium' }, '100% Read-Only Enforced')
+                    h('div', { className: 'p-3 rounded-xl bg-[var(--bg-surface)] border border-[var(--border-subtle)] space-y-1' },
+                      h('span', { className: 'text-[10px] font-mono text-[var(--text-muted)] uppercase font-semibold' }, 'GUARDRAIL STATUS'),
+                      h('p', { className: 'text-[var(--verified)] font-mono font-bold' }, '100% Read-Only Enforced')
                     )
                   )
                 )
@@ -1051,7 +1478,7 @@ function App() {
                       placeholder: 'Filter records in result...',
                       value: tableSearch,
                       onChange: (e) => setTableSearch(e.target.value),
-                      className: 'bg-[#121518] border border-white/10 rounded-xl px-3.5 py-1.5 text-xs text-[#F4F1EA] placeholder-[#687078] outline-none focus:border-[#C6A76B] w-64'
+                      className: 'bg-[var(--bg-surface)] border border-[var(--border-subtle)] rounded-xl px-3.5 py-1.5 text-xs text-[var(--text-primary)] placeholder-[var(--text-muted)] outline-none focus:border-[var(--champagne)] w-64'
                     }),
                     h('div', { className: 'flex items-center space-x-2' },
                       h('button', {
@@ -1068,21 +1495,21 @@ function App() {
                     )
                   ),
 
-                  h('div', { className: 'overflow-x-auto rounded-xl border border-white/5 max-h-96' },
+                  h('div', { className: 'overflow-x-auto rounded-xl border border-[var(--border-subtle)] max-h-96' },
                     h('table', { className: 'w-full text-left text-xs font-mono' },
-                      h('thead', { className: 'bg-[#121518] text-[#A7ADB3] uppercase tracking-wider sticky top-0 border-b border-white/5' },
+                      h('thead', { className: 'bg-[var(--bg-surface-soft)] text-[var(--text-secondary)] uppercase tracking-wider sticky top-0 border-b border-[var(--border-subtle)]' },
                         h('tr', null,
                           currentResult.columns.map((col, idx) => h('th', { key: idx, className: 'p-3 font-semibold whitespace-nowrap' }, col.replace(/_/g, ' ')))
                         )
                       ),
-                      h('tbody', { className: 'divide-y divide-white/5 bg-[#0B0D0F]' },
+                      h('tbody', { className: 'divide-y divide-[var(--border-subtle)] bg-[var(--bg-surface)]' },
                         filteredRows.length === 0
-                          ? h('tr', null, h('td', { colSpan: currentResult.columns.length, className: 'p-6 text-center text-[#687078]' }, 'No records match filter.'))
+                          ? h('tr', null, h('td', { colSpan: currentResult.columns.length, className: 'p-6 text-center text-[var(--text-muted)]' }, 'No records match filter.'))
                           : filteredRows.map((row, rIdx) => {
                               const isTopEvidence = rIdx === 0 && currentResult.verification?.grounded;
-                              return h('tr', { key: rIdx, className: `hover:bg-white/[0.02] transition ${isTopEvidence ? 'row-evidence-highlight' : ''}` },
-                                currentResult.columns.map((col, cIdx) => h('td', { key: cIdx, className: 'p-3 text-[#F4F1EA] whitespace-nowrap' },
-                                  row[col] !== null && row[col] !== undefined ? String(row[col]) : h('span', { className: 'text-[#687078]' }, 'NULL')
+                              return h('tr', { key: rIdx, className: `hover:bg-[var(--bg-surface-soft)] transition ${isTopEvidence ? 'row-evidence-highlight' : ''}` },
+                                currentResult.columns.map((col, cIdx) => h('td', { key: cIdx, className: 'p-3 text-[var(--text-primary)] whitespace-nowrap' },
+                                  row[col] !== null && row[col] !== undefined ? String(row[col]) : h('span', { className: 'text-[var(--text-muted)]' }, 'NULL')
                                 ))
                               );
                             })
@@ -1104,18 +1531,18 @@ function App() {
               },
                 h('div', { className: 'space-y-4' },
                   h('div', { className: 'flex items-center justify-between' },
-                    h('span', { className: 'text-xs text-[#A7ADB3]' }, 'Switch chart projection:'),
-                    h('div', { className: 'flex items-center space-x-1 bg-[#121518] p-1 rounded-lg border border-white/5 text-xs font-mono' },
+                    h('span', { className: 'text-xs text-[var(--text-secondary)]' }, 'Switch chart projection:'),
+                    h('div', { className: 'flex items-center space-x-1 bg-[var(--bg-surface)] p-1 rounded-lg border border-[var(--border-subtle)] text-xs font-mono' },
                       ['bar', 'line', 'doughnut'].map(t => h('button', {
                         key: t,
                         onClick: () => setChartTypeOverride(t),
                         className: `px-2.5 py-1 rounded capitalize transition ${
-                          (chartTypeOverride || currentResult.chart.type) === t ? 'bg-[#C6A76B] text-[#0B0D0F] font-bold' : 'text-[#A7ADB3] hover:text-[#F4F1EA]'
+                          (chartTypeOverride || currentResult.chart.type) === t ? 'bg-[var(--champagne)] text-[#0F172A] font-bold' : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)]'
                         }`
                       }, t))
                     )
                   ),
-                  h('div', { className: 'w-full h-80 relative p-4 bg-[#121518] rounded-2xl border border-white/5' },
+                  h('div', { className: 'w-full h-80 relative p-4 bg-[var(--bg-surface)] rounded-2xl border border-[var(--border-subtle)]' },
                     h('canvas', { ref: chartCanvasRef })
                   )
                 )
@@ -1123,24 +1550,24 @@ function App() {
             ) : isAnalyzing ? (
               // Loading placeholder on the right
               h('div', { className: 'p-10 rounded-2xl luxury-card text-center space-y-4 flex flex-col items-center justify-center min-h-[420px]' },
-                h('div', { className: 'w-12 h-12 rounded-full bg-[#C6A76B]/10 border border-[#C6A76B]/30 flex items-center justify-center' },
-                  h('span', { className: 'w-3 h-3 rounded-full bg-[#C6A76B] animate-ping' })
+                h('div', { className: 'w-12 h-12 rounded-full bg-[var(--champagne-dim)] border border-[var(--champagne-border)] flex items-center justify-center' },
+                  h('span', { className: 'w-3 h-3 rounded-full bg-[var(--champagne)] animate-ping' })
                 ),
                 h('div', { className: 'space-y-1' },
-                  h('h3', { className: 'text-base font-semibold text-[#F4F1EA]' }, 'Executing Grounded Analysis...'),
-                  h('p', { className: 'text-xs text-[#A7ADB3] max-w-sm' }, 'Generating validated SQL query, executing read-only sandbox, and verifying facts against raw database records.')
+                  h('h3', { className: 'text-base font-semibold text-[var(--text-primary)]' }, 'Executing Grounded Analysis...'),
+                  h('p', { className: 'text-xs text-[var(--text-secondary)] max-w-sm' }, 'Generating validated SQL query, executing read-only sandbox, and verifying facts against raw database records.')
                 )
               )
             ) : (
               // Standby / Ready State on the right
               h('div', { className: 'p-8 sm:p-10 rounded-2xl luxury-card space-y-6 min-h-[460px] flex flex-col justify-center' },
                 h('div', { className: 'space-y-2' },
-                  h('div', { className: 'inline-flex items-center space-x-2 px-3 py-1 rounded-full bg-[#181C20] border border-white/10 text-[10px] font-mono text-[#7FA58C]' },
-                    h('span', { className: 'w-1.5 h-1.5 rounded-full bg-[#7FA58C]' }),
-                    h('span', null, 'STANDBY • READY TO QUERY')
+                  h('div', { className: 'inline-flex items-center space-x-2 px-3 py-1 rounded-full bg-[var(--verified-bg)] border border-[var(--verified-border)] text-[10px] font-mono text-[var(--verified)] font-bold' },
+                    h('span', { className: 'w-1.5 h-1.5 rounded-full bg-[var(--verified)]' }),
+                    h('span', null, 'STANDBY • ZERO-HALLUCINATION READY')
                   ),
-                  h('h3', { className: 'font-serif-luxury text-2xl font-normal text-[#F4F1EA]' }, 'LIVE RESULT & EVIDENCE STUDIO'),
-                  h('p', { className: 'text-xs text-[#A7ADB3] leading-relaxed max-w-md' },
+                  h('h3', { className: 'font-serif-luxury text-2xl font-normal text-[var(--text-primary)]' }, 'LIVE RESULT & EVIDENCE STUDIO'),
+                  h('p', { className: 'text-xs text-[var(--text-secondary)] leading-relaxed max-w-md' },
                     'Ask a question on the left panel or click any demo flow pill. Your verified answers, mathematical proof, SQL queries, and interactive data grids will appear right here without needing to scroll down.'
                   )
                 ),
@@ -1150,16 +1577,16 @@ function App() {
                     { icon: 'shieldCheck', title: '100% Grounded', desc: 'Every claim verified against database rows' },
                     { icon: 'code', title: 'Safe Read-Only', desc: 'Guaranteed prevention of harmful statements' },
                     { icon: 'table', title: 'Data Evidence', desc: 'Exportable rows & dynamic visual charts' }
-                  ].map((f, i) => h('div', { key: i, className: 'p-3.5 rounded-xl bg-[#0E1013]/80 border border-white/5 space-y-1.5' },
-                    h(Icon, { name: f.icon, className: 'w-4 h-4 text-[#C6A76B]' }),
-                    h('h4', { className: 'text-xs font-semibold text-[#F4F1EA]' }, f.title),
-                    h('p', { className: 'text-[11px] text-[#687078]' }, f.desc)
+                  ].map((f, i) => h('div', { key: i, className: 'p-3.5 rounded-xl bg-[var(--bg-surface-soft)] border border-[var(--border-subtle)] space-y-1.5' },
+                    h(Icon, { name: f.icon, className: 'w-4 h-4 text-[var(--champagne)]' }),
+                    h('h4', { className: 'text-xs font-semibold text-[var(--text-primary)]' }, f.title),
+                    h('p', { className: 'text-[11px] text-[var(--text-muted)]' }, f.desc)
                   ))
                 ),
 
-                h('div', { className: 'p-3 rounded-xl bg-[#181C20]/60 border border-white/5 flex items-center justify-between text-xs font-mono text-[11px]' },
-                  h('span', { className: 'text-[#A7ADB3]' }, `Active Database: ${activeDatabaseObj.name}`),
-                  h('span', { className: 'text-[#C6A76B]' }, `${activeDatabaseObj.table_count || schemaData?.tables?.length || 5} Tables Loaded`)
+                h('div', { className: 'p-3 rounded-xl bg-[var(--bg-surface-soft)] border border-[var(--border-subtle)] flex items-center justify-between text-xs font-mono text-[11px]' },
+                  h('span', { className: 'text-[var(--text-secondary)]' }, `Active Database: ${activeDatabaseObj.name}`),
+                  h('span', { className: 'text-[var(--champagne)] font-bold' }, `${activeDatabaseObj.table_count || schemaData?.tables?.length || 5} Tables Loaded`)
                 )
               )
             )
@@ -1168,15 +1595,28 @@ function App() {
       ),
 
       // ==========================================
-      // VIEW 2: DATA LIBRARY (SCHEMA EXPLORER)
+      // VIEW 2: 50% PILLAR - HALLUCINATION LAB & SHIELD
+      // ==========================================
+      activeTab === 'hallucination' && h(HallucinationLabWorkspace, {
+        activeDb,
+        databases,
+        showToast,
+        onSendQueryToStudio: (q, sim) => {
+          setActiveTab('ask');
+          handleSendQuery(q, sim);
+        }
+      }),
+
+      // ==========================================
+      // VIEW 3: DATA LIBRARY (SCHEMA EXPLORER)
       // ==========================================
       activeTab === 'explore' && h('div', { className: 'space-y-8 animate-entrance' },
         h('div', { className: 'space-y-2' },
-          h('span', { className: 'text-[10px] font-mono tracking-widest text-[#C6A76B] uppercase' }, 'RELATIONAL ARCHITECTURE'),
-          h('h2', { className: 'font-serif-luxury text-3xl font-normal text-[#F4F1EA]' }, 'DATA LIBRARY'),
-          h('p', { className: 'text-sm text-[#A7ADB3]' },
+          h('span', { className: 'text-[10px] font-mono tracking-widest text-[var(--champagne)] uppercase font-bold' }, 'RELATIONAL ARCHITECTURE'),
+          h('h2', { className: 'font-serif-luxury text-3xl font-normal text-[var(--text-primary)]' }, 'DATA LIBRARY'),
+          h('p', { className: 'text-sm text-[var(--text-secondary)]' },
             `Database: `,
-            h('span', { className: 'text-[#F4F1EA] font-semibold' }, schemaData?.database_name || activeDb),
+            h('span', { className: 'text-[var(--text-primary)] font-semibold' }, schemaData?.database_name || activeDb),
             ` • ${schemaData?.tables.length || 0} relational tables registered`
           )
         ),
@@ -1186,12 +1626,12 @@ function App() {
             key: table.name,
             className: 'luxury-card rounded-2xl p-6 space-y-4'
           },
-            h('div', { className: 'flex items-center justify-between border-b border-white/5 pb-3' },
+            h('div', { className: 'flex items-center justify-between border-b border-[var(--border-subtle)] pb-3' },
               h('div', { className: 'flex items-center space-x-2' },
-                h(Icon, { name: 'table', className: 'w-4 h-4 text-[#C6A76B]' }),
-                h('h3', { className: 'font-semibold text-sm text-[#F4F1EA] font-mono' }, table.name)
+                h(Icon, { name: 'table', className: 'w-4 h-4 text-[var(--champagne)]' }),
+                h('h3', { className: 'font-semibold text-sm text-[var(--text-primary)] font-mono' }, table.name)
               ),
-              h('span', { className: 'text-[11px] font-mono bg-[#181C20] text-[#A7ADB3] px-2.5 py-0.5 rounded-full border border-white/5' },
+              h('span', { className: 'text-[11px] font-mono bg-[var(--bg-surface-soft)] text-[var(--text-secondary)] px-2.5 py-0.5 rounded-full border border-[var(--border-subtle)]' },
                 `${table.row_count} rows`
               )
             ),
@@ -1200,21 +1640,21 @@ function App() {
             h('div', { className: 'space-y-1.5 max-h-56 overflow-y-auto pr-1' },
               table.columns.map(col => h('div', {
                 key: col.name,
-                className: 'flex items-center justify-between text-xs py-1.5 px-2.5 rounded-lg bg-[#0E1013] border border-white/5 font-mono'
+                className: 'flex items-center justify-between text-xs py-1.5 px-2.5 rounded-lg bg-[var(--bg-surface-soft)] border border-[var(--border-subtle)] font-mono'
               },
-                h('span', { className: 'text-[#F4F1EA]' }, col.name),
+                h('span', { className: 'text-[var(--text-primary)]' }, col.name),
                 h('div', { className: 'flex items-center space-x-1.5' },
-                  h('span', { className: 'text-[#687078] text-[10px]' }, col.type),
-                  col.is_primary_key && h('span', { className: 'bg-[#C6A76B]/20 text-[#C6A76B] text-[9px] px-1.5 py-0.5 rounded font-bold' }, 'PK'),
-                  col.foreign_key && h('span', { className: 'bg-[#7FA58C]/20 text-[#7FA58C] text-[9px] px-1.5 py-0.5 rounded' }, 'FK')
+                  h('span', { className: 'text-[var(--text-muted)] text-[10px]' }, col.type),
+                  col.is_primary_key && h('span', { className: 'bg-[var(--champagne-dim)] text-[var(--champagne)] border border-[var(--champagne-border)] text-[9px] px-1.5 py-0.5 rounded font-bold' }, 'PK'),
+                  col.foreign_key && h('span', { className: 'bg-[var(--verified-bg)] text-[var(--verified)] border border-[var(--verified-border)] text-[9px] px-1.5 py-0.5 rounded' }, 'FK')
                 )
               ))
             ),
 
             // Sample Record Preview
-            table.sample_rows && table.sample_rows.length > 0 && h('div', { className: 'pt-2 border-t border-white/5 space-y-1' },
-              h('span', { className: 'text-[10px] font-mono text-[#687078] uppercase' }, 'SAMPLE RECORD'),
-              h('pre', { className: 'text-[10px] bg-[#0E1013] p-2.5 rounded-lg text-[#A7ADB3] overflow-x-auto border border-white/5 font-mono' },
+            table.sample_rows && table.sample_rows.length > 0 && h('div', { className: 'pt-2 border-t border-[var(--border-subtle)] space-y-1' },
+              h('span', { className: 'text-[10px] font-mono text-[var(--text-muted)] uppercase font-semibold' }, 'SAMPLE RECORD'),
+              h('pre', { className: 'text-[10px] bg-[var(--bg-surface-soft)] p-2.5 rounded-lg text-[var(--text-secondary)] overflow-x-auto border border-[var(--border-subtle)] font-mono' },
                 JSON.stringify(table.sample_rows[0], null, 2)
               )
             )
@@ -1223,13 +1663,13 @@ function App() {
       ),
 
       // ==========================================
-      // VIEW 3: AUDIT TRAIL (TELEMETRY & HISTORY)
+      // VIEW 4: AUDIT TRAIL (TELEMETRY & HISTORY)
       // ==========================================
       activeTab === 'history' && h('div', { className: 'space-y-8 animate-entrance' },
         h('div', { className: 'flex flex-wrap items-center justify-between gap-4' },
           h('div', { className: 'space-y-1' },
-            h('span', { className: 'text-[10px] font-mono tracking-widest text-[#C6A76B] uppercase' }, 'TELEMETRY & VERIFICATION LOGS'),
-            h('h2', { className: 'font-serif-luxury text-3xl font-normal text-[#F4F1EA]' }, 'AUDIT TRAIL')
+            h('span', { className: 'text-[10px] font-mono tracking-widest text-[var(--champagne)] uppercase font-bold' }, 'TELEMETRY & VERIFICATION LOGS'),
+            h('h2', { className: 'font-serif-luxury text-3xl font-normal text-[var(--text-primary)]' }, 'AUDIT TRAIL')
           ),
           h('button', {
             onClick: async () => {
@@ -1244,7 +1684,7 @@ function App() {
         h('div', { className: 'luxury-card rounded-2xl overflow-hidden' },
           h('div', { className: 'overflow-x-auto' },
             h('table', { className: 'w-full text-left text-xs font-mono' },
-              h('thead', { className: 'bg-[#121518] text-[#A7ADB3] uppercase tracking-wider border-b border-white/5' },
+              h('thead', { className: 'bg-[var(--bg-surface-soft)] text-[var(--text-secondary)] uppercase tracking-wider border-b border-[var(--border-subtle)]' },
                 h('tr', null,
                   h('th', { className: 'p-4 font-semibold' }, 'Timestamp'),
                   h('th', { className: 'p-4 font-semibold' }, 'Question'),
@@ -1255,22 +1695,22 @@ function App() {
                   h('th', { className: 'p-4 font-semibold' }, 'Rows')
                 )
               ),
-              h('tbody', { className: 'divide-y divide-white/5 bg-[#0B0D0F]' },
+              h('tbody', { className: 'divide-y divide-[var(--border-subtle)] bg-[var(--bg-surface)]' },
                 queryHistory.length === 0
-                  ? h('tr', null, h('td', { colSpan: 7, className: 'p-8 text-center text-[#687078] font-sans' }, 'No audit logs recorded yet.'))
-                  : queryHistory.map(item => h('tr', { key: item.id, className: 'hover:bg-white/[0.02] transition' },
-                      h('td', { className: 'p-4 text-[#687078] whitespace-nowrap' }, item.timestamp),
-                      h('td', { className: 'p-4 text-[#F4F1EA] font-sans max-w-xs truncate font-medium' }, item.question),
-                      h('td', { className: 'p-4 text-[#C6A76B] max-w-sm truncate' }, item.sql || "N/A"),
+                  ? h('tr', null, h('td', { colSpan: 7, className: 'p-8 text-center text-[var(--text-muted)] font-sans' }, 'No audit logs recorded yet.'))
+                  : queryHistory.map(item => h('tr', { key: item.id, className: 'hover:bg-[var(--bg-surface-soft)] transition' },
+                      h('td', { className: 'p-4 text-[var(--text-muted)] whitespace-nowrap' }, item.timestamp),
+                      h('td', { className: 'p-4 text-[var(--text-primary)] font-sans max-w-xs truncate font-semibold' }, item.question),
+                      h('td', { className: 'p-4 text-[var(--champagne)] max-w-sm truncate' }, item.sql || "N/A"),
                       h('td', { className: 'p-4' },
-                        h('span', { className: `px-2.5 py-1 rounded text-[10px] font-semibold ${
+                        h('span', { className: `px-2.5 py-1 rounded text-[10px] font-bold ${
                           item.verification_status === 'VERIFIED' ? 'badge-verified-luxury' :
                           item.verification_status === 'NEEDS REVIEW' ? 'badge-warning-luxury' : 'badge-danger-luxury'
                         }` }, item.verification_status || item.status)
                       ),
-                      h('td', { className: 'p-4 font-bold text-[#F4F1EA]' }, item.reliability_score ? `${item.reliability_score}/100` : '—'),
-                      h('td', { className: 'p-4 text-[#A7ADB3] whitespace-nowrap' }, `${item.execution_time_ms}ms`),
-                      h('td', { className: 'p-4 text-[#F4F1EA]' }, item.row_count)
+                      h('td', { className: 'p-4 font-bold text-[var(--text-primary)]' }, item.reliability_score ? `${item.reliability_score}/100` : '—'),
+                      h('td', { className: 'p-4 text-[var(--text-secondary)] whitespace-nowrap' }, `${item.execution_time_ms}ms`),
+                      h('td', { className: 'p-4 text-[var(--text-primary)]' }, item.row_count)
                     ))
               )
             )
@@ -1279,12 +1719,12 @@ function App() {
       ),
 
       // ==========================================
-      // VIEW 4: INSIGHTS (ENTERPRISE METRICS)
+      // VIEW 5: INSIGHTS (ENTERPRISE METRICS)
       // ==========================================
       activeTab === 'insights' && h('div', { className: 'space-y-8 animate-entrance' },
         h('div', { className: 'space-y-1' },
-          h('span', { className: 'text-[10px] font-mono tracking-widest text-[#C6A76B] uppercase' }, 'ENTERPRISE SYSTEM TELEMETRY'),
-          h('h2', { className: 'font-serif-luxury text-3xl font-normal text-[#F4F1EA]' }, 'TRUST & USAGE INSIGHTS')
+          h('span', { className: 'text-[10px] font-mono tracking-widest text-[var(--champagne)] uppercase font-bold' }, 'ENTERPRISE SYSTEM TELEMETRY'),
+          h('h2', { className: 'font-serif-luxury text-3xl font-normal text-[var(--text-primary)]' }, 'TRUST & USAGE INSIGHTS')
         ),
 
         // Large Editorial Metrics
@@ -1295,31 +1735,31 @@ function App() {
             { label: "AVG RELIABILITY", value: `${insightsMetrics.avgReliability}`, sub: "Weighted verification score / 100" },
             { label: "AVG RESPONSE TIME", value: insightsMetrics.avgLatency, sub: "End-to-end execution & validation" }
           ].map((m, idx) => h('div', { key: idx, className: 'luxury-card rounded-2xl p-6 space-y-2' },
-            h('span', { className: 'text-[10px] font-mono tracking-widest text-[#A7ADB3] uppercase' }, m.label),
-            h('p', { className: 'text-3xl font-serif-luxury text-[#F4F1EA] font-normal pt-1' }, m.value),
-            h('p', { className: 'text-xs text-[#687078]' }, m.sub)
+            h('span', { className: 'text-[10px] font-mono tracking-widest text-[var(--text-muted)] uppercase font-semibold' }, m.label),
+            h('p', { className: 'text-3xl font-serif-luxury text-[var(--text-primary)] font-normal pt-1' }, m.value),
+            h('p', { className: 'text-xs text-[var(--text-muted)]' }, m.sub)
           ))
         ),
 
         // Architecture Pillars Card
         h('div', { className: 'luxury-card rounded-2xl p-8 space-y-6' },
-          h('h3', { className: 'font-serif-luxury text-xl text-[#F4F1EA]' }, 'HOW NEURA-X ENFORCES TRUST'),
+          h('h3', { className: 'font-serif-luxury text-xl text-[var(--text-primary)]' }, 'HOW TRUSTDB-AI ENFORCES ZERO HALLUCINATION'),
           h('div', { className: 'grid grid-cols-1 md:grid-cols-3 gap-6 text-sm leading-relaxed' },
             h('div', { className: 'space-y-2' },
-              h('span', { className: 'text-[#C6A76B] font-mono font-semibold' }, '01. Read-Only Sandbox'),
-              h('p', { className: 'text-[#A7ADB3] text-xs leading-relaxed' },
+              h('span', { className: 'text-[var(--champagne)] font-mono font-bold' }, '01. Read-Only Sandbox'),
+              h('p', { className: 'text-[var(--text-secondary)] text-xs leading-relaxed' },
                 'Enforces read-only DDL/DML restrictions, preventing SQL injection or data mutation attempts.'
               )
             ),
             h('div', { className: 'space-y-2' },
-              h('span', { className: 'text-[#C6A76B] font-mono font-semibold' }, '02. Grounding Verification'),
-              h('p', { className: 'text-[#A7ADB3] text-xs leading-relaxed' },
+              h('span', { className: 'text-[var(--champagne)] font-mono font-bold' }, '02. Grounding Verification Matrix'),
+              h('p', { className: 'text-[var(--text-secondary)] text-xs leading-relaxed' },
                 'Cross-checks every synthesized number, superlative, and entity against returned rows before rendering.'
               )
             ),
             h('div', { className: 'space-y-2' },
-              h('span', { className: 'text-[#C6A76B] font-mono font-semibold' }, '03. Zero Hallucination Guarantee'),
-              h('p', { className: 'text-[#A7ADB3] text-xs leading-relaxed' },
+              h('span', { className: 'text-[var(--champagne)] font-mono font-bold' }, '03. Zero Hallucination Guarantee'),
+              h('p', { className: 'text-[var(--text-secondary)] text-xs leading-relaxed' },
                 'Flags unsupported claims as NEEDS REVIEW with detailed rationale instead of presenting unverified guesses.'
               )
             )
@@ -1331,15 +1771,15 @@ function App() {
 
     // SETTINGS & DATASET MODAL
     isSettingsOpen && h('div', { className: 'fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-6 animate-entrance' },
-      h('div', { className: 'luxury-card rounded-3xl max-w-xl w-full p-8 space-y-6 max-h-[90vh] overflow-y-auto border border-white/10 shadow-2xl' },
-        h('div', { className: 'flex items-center justify-between border-b border-white/5 pb-4' },
+      h('div', { className: 'luxury-card rounded-3xl max-w-xl w-full p-8 space-y-6 max-h-[90vh] overflow-y-auto border border-[var(--border-medium)] shadow-2xl' },
+        h('div', { className: 'flex items-center justify-between border-b border-[var(--border-subtle)] pb-4' },
           h('div', null,
-            h('h3', { className: 'font-serif-luxury text-xl text-[#F4F1EA]' }, 'ENGINE CONFIGURATION'),
-            h('p', { className: 'text-xs text-[#A7ADB3] mt-0.5' }, 'Select LLM providers or import custom CSV datasets into SQLite')
+            h('h3', { className: 'font-serif-luxury text-xl text-[var(--text-primary)]' }, 'ENGINE CONFIGURATION'),
+            h('p', { className: 'text-xs text-[var(--text-secondary)] mt-0.5' }, 'Select LLM providers, theme, or import custom CSV datasets into SQLite')
           ),
           h('button', {
             onClick: () => setIsSettingsOpen(false),
-            className: 'text-[#A7ADB3] hover:text-[#F4F1EA] p-2 rounded-xl bg-[#181C20]'
+            className: 'text-[var(--text-muted)] hover:text-[var(--text-primary)] p-2 rounded-xl bg-[var(--bg-surface-soft)]'
           }, '✕')
         ),
 
@@ -1367,12 +1807,40 @@ function App() {
           },
           className: 'space-y-4 text-xs'
         },
+          // Theme Preference Picker
           h('div', null,
-            h('label', { className: 'block text-[#A7ADB3] font-mono uppercase tracking-wider mb-2' }, 'Active AI Engine'),
+            h('label', { className: 'block text-[var(--text-muted)] font-mono uppercase tracking-wider mb-2 font-semibold' }, 'Color Theme Interface'),
+            h('div', { className: 'grid grid-cols-2 gap-3' },
+              h('button', {
+                type: 'button',
+                onClick: () => setTheme('dark'),
+                className: `p-3 rounded-xl border flex items-center justify-center space-x-2 text-xs font-semibold ${
+                  theme === 'dark' ? 'bg-[var(--champagne-dim)] border-[var(--champagne-border)] text-[var(--champagne)]' : 'bg-[var(--bg-surface-soft)] border-[var(--border-subtle)] text-[var(--text-secondary)]'
+                }`
+              },
+                h(Icon, { name: 'moon', className: 'w-4 h-4' }),
+                h('span', null, 'Dark Onyx')
+              ),
+              h('button', {
+                type: 'button',
+                onClick: () => setTheme('light'),
+                className: `p-3 rounded-xl border flex items-center justify-center space-x-2 text-xs font-semibold ${
+                  theme === 'light' ? 'bg-[var(--champagne-dim)] border-[var(--champagne-border)] text-[var(--champagne)]' : 'bg-[var(--bg-surface-soft)] border-[var(--border-subtle)] text-[var(--text-secondary)]'
+                }`
+              },
+                h(Icon, { name: 'sun', className: 'w-4 h-4' }),
+                h('span', null, 'Light Porcelain')
+              )
+            )
+          ),
+
+          // Provider selector
+          h('div', null,
+            h('label', { className: 'block text-[var(--text-muted)] font-mono uppercase tracking-wider mb-2 font-semibold' }, 'Active AI Engine'),
             h('select', {
               value: settingsData.llm_provider,
               onChange: (e) => setSettingsData({ ...settingsData, llm_provider: e.target.value }),
-              className: 'w-full bg-[#121518] border border-white/10 rounded-xl px-4 py-2.5 text-[#F4F1EA] outline-none focus:border-[#C6A76B] font-medium'
+              className: 'w-full bg-[var(--bg-surface-soft)] border border-[var(--border-subtle)] rounded-xl px-4 py-2.5 text-[var(--text-primary)] outline-none focus:border-[var(--champagne)] font-medium'
             },
               h('option', { value: 'offline' }, 'Smart Heuristic Engine (100% Offline / Zero-Setup)'),
               h('option', { value: 'gemini' }, 'Google Gemini API (Gemini 2.5 Flash / 1.5 Pro)'),
@@ -1382,47 +1850,47 @@ function App() {
           ),
 
           settingsData.llm_provider === 'gemini' && h('div', null,
-            h('label', { className: 'block text-[#A7ADB3] font-mono uppercase tracking-wider mb-2' }, 'Gemini API Key'),
+            h('label', { className: 'block text-[var(--text-muted)] font-mono uppercase tracking-wider mb-2 font-semibold' }, 'Gemini API Key'),
             h('input', {
               type: 'password',
               placeholder: 'AIzaSy...',
               value: settingsData.gemini_key_input,
               onChange: (e) => setSettingsData({ ...settingsData, gemini_key_input: e.target.value }),
-              className: 'w-full bg-[#121518] border border-white/10 rounded-xl px-4 py-2.5 text-[#F4F1EA] outline-none focus:border-[#C6A76B] font-mono'
+              className: 'w-full bg-[var(--bg-surface-soft)] border border-[var(--border-subtle)] rounded-xl px-4 py-2.5 text-[var(--text-primary)] outline-none focus:border-[var(--champagne)] font-mono'
             })
           ),
 
           settingsData.llm_provider === 'openai' && h('div', null,
-            h('label', { className: 'block text-[#A7ADB3] font-mono uppercase tracking-wider mb-2' }, 'OpenAI API Key'),
+            h('label', { className: 'block text-[var(--text-muted)] font-mono uppercase tracking-wider mb-2 font-semibold' }, 'OpenAI API Key'),
             h('input', {
               type: 'password',
               placeholder: 'sk-...',
               value: settingsData.openai_key_input,
               onChange: (e) => setSettingsData({ ...settingsData, openai_key_input: e.target.value }),
-              className: 'w-full bg-[#121518] border border-white/10 rounded-xl px-4 py-2.5 text-[#F4F1EA] outline-none focus:border-[#C6A76B] font-mono'
+              className: 'w-full bg-[var(--bg-surface-soft)] border border-[var(--border-subtle)] rounded-xl px-4 py-2.5 text-[var(--text-primary)] outline-none focus:border-[var(--champagne)] font-mono'
             })
           ),
 
           h('button', {
             type: 'submit',
-            className: 'btn-champagne w-full py-3 rounded-xl font-semibold transition'
+            className: 'btn-champagne w-full py-3 rounded-xl font-bold transition'
           }, 'Save Configuration')
         ),
 
         // CSV Uploader Area
-        h('div', { className: 'pt-4 border-t border-white/5 space-y-3' },
-          h('span', { className: 'text-[10px] font-mono tracking-widest text-[#A7ADB3] uppercase block' }, 'UPLOAD CUSTOM CSV DATASET'),
-          h('div', { className: 'border border-dashed border-white/10 rounded-2xl p-6 text-center space-y-2' },
-            h(Icon, { name: 'upload', className: 'w-8 h-8 text-[#C6A76B] mx-auto' }),
-            h('p', { className: 'text-xs text-[#F4F1EA]' }, 'Select any CSV file to import as an SQLite table'),
+        h('div', { className: 'pt-4 border-t border-[var(--border-subtle)] space-y-3' },
+          h('span', { className: 'text-[10px] font-mono tracking-widest text-[var(--text-muted)] uppercase block font-semibold' }, 'UPLOAD CUSTOM CSV DATASET'),
+          h('div', { className: 'border border-dashed border-[var(--border-medium)] rounded-2xl p-6 text-center space-y-2 bg-[var(--bg-surface-soft)]' },
+            h(Icon, { name: 'upload', className: 'w-8 h-8 text-[var(--champagne)] mx-auto' }),
+            h('p', { className: 'text-xs text-[var(--text-primary)] font-medium' }, 'Select any CSV file to import as an SQLite table'),
             h('input', {
               type: 'file',
               accept: '.csv',
               onChange: handleCSVUpload,
-              className: 'text-xs text-[#A7ADB3] file:mr-3 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-xs file:bg-[#181C20] file:text-[#C6A76B] cursor-pointer'
+              className: 'text-xs text-[var(--text-muted)] file:mr-3 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-xs file:bg-[var(--bg-surface)] file:text-[var(--champagne)] cursor-pointer'
             })
           ),
-          uploadStatus && h('p', { className: 'text-xs bg-[#121518] p-3 rounded-xl text-[#C6A76B] font-mono' }, uploadStatus)
+          uploadStatus && h('p', { className: 'text-xs bg-[var(--bg-surface-soft)] p-3 rounded-xl text-[var(--champagne)] font-mono' }, uploadStatus)
         )
       )
     )

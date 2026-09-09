@@ -32,8 +32,11 @@ class VerificationDetails(BaseModel):
     status: str = Field(..., description="VERIFIED, MOSTLY VERIFIED, NEEDS REVIEW, or UNVERIFIED")
     grounded: bool = Field(..., description="True if answer is fully supported by database evidence")
     reliability_score: int = Field(..., description="Reliability score from 0 to 100")
+    hallucination_risk_pct: Optional[int] = Field(0, description="Hallucination Risk Probability %")
+    hallucination_risk_level: Optional[str] = Field("MINIMAL", description="MINIMAL, LOW, ELEVATED, CRITICAL")
     reason: str = Field(..., description="Verification explanation")
     evidence: List[str] = Field(default_factory=list, description="Extracted evidence from DB rows")
+    claims_breakdown: Optional[List[Dict[str, Any]]] = Field(default_factory=list, description="Per-claim grounding classification")
     verification_latency_ms: float = 0.0
     checks: Optional[Dict[str, Any]] = None
 
