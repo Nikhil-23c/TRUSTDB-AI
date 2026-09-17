@@ -34,6 +34,11 @@ class ResultSummarizer:
         # Case 2: Specific Single Row with Name & Metric (e.g., "Who has highest attendance?" or "Student details")
         if row_count == 1:
             row = rows[0]
+            # Check for section tutor
+            if "tutor_name" in row and "section" in row:
+                strength_str = f" with a student strength of {row['student_strength']}" if "student_strength" in row else ""
+                return f"Section {row['section']} is assigned to **{row['tutor_name']}**{strength_str}."
+
             # Check for department count
             if "dept_name" in row and ("student_count" in row or "total_students" in row):
                 count_val = row.get("student_count", row.get("total_students"))
@@ -74,7 +79,15 @@ class ResultSummarizer:
             
             return f"Here are the top {row_count} records with the highest {metric_label}:\n\n" + "\n".join(items)
 
-        # Case 4: Multi-metric Group Aggregations (e.g., departments with student counts and average CGPA)
+        # Case 4: Tutor & Section listings
+        if ("tutor" in q_low or "section" in q_low) and "tutor_name" in columns:
+            if row_count <= 4:
+                items = [f"• Section **{r.get('section', '')}**: **{r.get('tutor_name', '')}**" for r in rows if r.get('tutor_name')]
+                return f"Found **{row_count}** tutor records matching your query:\n\n" + "\n".join(items)
+            else:
+                return f"Found **{row_count}** tutor records matching your query. View full structured records in the interactive database table below."
+
+        # Case 5: Multi-metric Group Aggregations (e.g., departments with student counts and average CGPA)
         if len(columns) >= 2 and any(isinstance(rows[0].get(c), (int, float)) for c in columns[1:]):
             name_candidates = [c for c in columns if "name" in c.lower()]
             text_candidates = [c for c in columns if not c.endswith("_id") and c != "id" and isinstance(rows[0].get(c), str)]
@@ -87,20 +100,20 @@ class ResultSummarizer:
                 label_col = columns[0]
 
             metric_cols = [c for c in columns if c != label_col and not c.endswith("_id") and c != "id"]
-            if metric_cols:
+            if metric_cols and row_count <= 5:
                 summary_items = []
-                for r in rows[:7]:
+                for r in rows:
                     m_strs = [f"{c.replace('_', ' ').title()}: **{r.get(c)}**" for c in metric_cols if r.get(c) is not None]
                     label_val = r.get(label_col, "Record")
                     summary_items.append(f"• **{label_val}** ({', '.join(m_strs)})")
-                more = f"\n...and {row_count - 7} more" if row_count > 7 else ""
-                return f"Breakdown across **{label_col.replace('_', ' ').title()}**:\n\n" + "\n".join(summary_items) + more
+                return f"Breakdown across **{label_col.replace('_', ' ').title()}** ({row_count} records returned):\n\n" + "\n".join(summary_items)
+            else:
+                return f"Found **{row_count}** records matching your query. View full structured records in the interactive database table below."
 
-        # Case 5: General multi-row summary
+        # Case 6: General multi-row summary
         name_col = next((c for c in columns if "name" in c.lower()), None)
-        if name_col and row_count <= 10:
-            names = [f"**{r.get(name_col)}**" for r in rows if r.get(name_col)]
-            if names:
-                return f"Found **{row_count}** matching records: {', '.join(names)}. Full details are displayed in the interactive grid."
+        if name_col and row_count <= 4:
+            items = [f"• **{r[name_col]}**" for r in rows if r.get(name_col)]
+            return f"Found **{row_count}** matching records:\n\n" + "\n".join(items)
 
-        return f"Found **{row_count}** matching records for your query. The details are displayed in the interactive grid."
+        return f"Found **{row_count}** records matching your query. Complete structured records are displayed in the interactive database table below."

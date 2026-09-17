@@ -3,8 +3,16 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>NEURA-X — Trusted AI for Your Data</title>
-  <meta name="description" content="Ask your data anything. Neura-X finds the answer, verifies it against the database, and shows you why you can trust it." />
+  <title>NEURA-X — Trusted AI Database Assistant</title>
+  <meta name="description" content="Ask your data anything. Neura-X verifies every claim against the database, intercepts hallucinations, and delivers mathematically grounded truth." />
+
+  <!-- Pre-apply theme class to prevent flash of wrong theme -->
+  <script>
+    (function() {
+      const savedTheme = localStorage.getItem('neura_theme') || 'dark';
+      document.documentElement.className = savedTheme;
+    })();
+  </script>
 
   <!-- Preconnect to Google Fonts for Ultra-Fast Editorial Typography -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -23,36 +31,6 @@
             serif: ['"Cinzel"', 'serif'],
             mono: ['"JetBrains Mono"', 'monospace'],
           },
-          colors: {
-            base: '#0B0D0F',
-            surface: {
-              DEFAULT: '#121518',
-              soft: '#181C20',
-              elevated: '#1D2228',
-              hover: '#222830'
-            },
-            champagne: {
-              DEFAULT: '#C6A76B',
-              hover: '#D8BC82',
-              dim: 'rgba(198, 167, 107, 0.12)',
-              glow: 'rgba(198, 167, 107, 0.25)'
-            },
-            verified: {
-              DEFAULT: '#7FA58C',
-              bg: 'rgba(127, 165, 140, 0.12)',
-              border: 'rgba(127, 165, 140, 0.35)'
-            },
-            warning: {
-              DEFAULT: '#B99A62',
-              bg: 'rgba(185, 154, 98, 0.12)',
-              border: 'rgba(185, 154, 98, 0.35)'
-            },
-            danger: {
-              DEFAULT: '#B86D6D',
-              bg: 'rgba(184, 109, 109, 0.12)',
-              border: 'rgba(184, 109, 109, 0.35)'
-            }
-          },
           letterSpacing: {
             widest: '0.15em',
             ultra: '0.25em'
@@ -70,12 +48,12 @@
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
   <!-- Custom Cinematic Luxury Styles -->
-  <link rel="stylesheet" href="/static/styles.css?v=2" />
+  <link rel="stylesheet" href="/static/styles.css?v=6" />
 </head>
-<body class="bg-[#0B0D0F] text-[#F4F1EA] antialiased selection:bg-[#C6A76B] selection:text-[#0B0D0F] min-h-screen">
+<body class="antialiased min-h-screen">
   <div id="root"></div>
 
-  <!-- Pure Fast React App Script -->
-  <script src="/static/app.js?v=2"></script>
+  <!-- React App Script -->
+  <script src="/static/app.js?v=6"></script>
 </body>
 </html>

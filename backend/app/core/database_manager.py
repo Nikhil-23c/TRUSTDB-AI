@@ -54,6 +54,22 @@ class DatabaseManager:
             "icon": "Activity"
         }
 
+        # Auto-discover uploaded/custom databases
+        if UPLOAD_DIR.exists():
+            for db_file in sorted(UPLOAD_DIR.glob("*.db"), key=os.path.getmtime, reverse=True):
+                db_id = db_file.stem
+                if db_id not in self.databases:
+                    clean_name = re.sub(r"^csv_\d+_", "", db_id).replace("_", " ").title()
+                    self.databases[db_id] = {
+                        "id": db_id,
+                        "name": f"CSV: {clean_name}",
+                        "description": f"Custom uploaded database table '{clean_name}'.",
+                        "type": "sqlite",
+                        "uri": f"sqlite:///{db_file}",
+                        "file_path": str(db_file),
+                        "icon": "FileSpreadsheet"
+                    }
+
     def list_databases(self) -> List[Dict[str, Any]]:
         """List all available registered databases."""
         return [

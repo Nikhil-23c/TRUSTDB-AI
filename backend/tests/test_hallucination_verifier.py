@@ -258,3 +258,75 @@ async def test_api_dedicated_verify_endpoint():
         assert data["grounded"] is True
         assert data["status"] == "VERIFIED"
         assert data["reliability_score"] >= 90
+
+
+@pytest.mark.anyio
+async def test_hallucination_benchmarks_and_candidate_test():
+    """Tests the /api/hallucination endpoints: benchmarks, test-candidate, and telemetry."""
+    transport = ASGITransport(app=app)
+    async with AsyncClient(transport=transport, base_url="http://test") as ac:
+        # 1. Benchmarks
+        bench_res = await ac.get("/api/hallucination/benchmarks")
+        assert bench_res.status_code == 200
+        b_data = bench_res.json()
+        assert b_data["total_scenarios"] >= 6
+        assert len(b_data["scenarios"]) >= 6
+
+        # 2. Test candidate with blatant hallucination
+        test_res = await ac.post("/api/hallucination/test-candidate", json={
+            "question": "Who has the highest attendance?",
+            "database_id": "college_records",
+            "candidate_answer": "Arun has 96% attendance and is the best student in the college with 100% scholarship."
+        })
+        assert test_res.status_code == 200
+        t_data = test_res.json()
+        assert t_data["is_grounded"] is False
+        assert t_data["hallucination_detected"] is True
+        assert t_data["hallucination_risk_pct"] > 30
+        assert len(t_data["claims_breakdown"]) > 0
+
+        # 3. Telemetry
+        telem_res = await ac.get("/api/hallucination/telemetry")
+        assert telem_res.status_code == 200
+        telem_data = telem_res.json()
+        assert "hallucination_prevention_rate" in telem_data
+        assert len(telem_data["active_defense_layers"]) >= 5
+
+
+@pytest.mark.anyio
+async def test_row_count_claim_valid_and_mismatch():
+    """Tests distinguishing row count claims from entity hallucination."""
+    rows = [
+        {"section": "A", "tutor_name": "Mrs. Raashma"},
+        {"section": "B", "tutor_name": "Mrs. Malathi Sundaram"},
+        {"section": "C", "tutor_name": "Dr. Kavitha Chandran"}
+    ]
+    cols = ["section", "tutor_name"]
+
+    # Valid row count claim
+    res_valid = AnswerVerifier.verify_answer(
+        user_query="List the tutors",
+        sql_query="SELECT section, tutor_name FROM sections",
+        columns=cols,
+        rows=rows,
+        row_count=3,
+        generated_answer="Found **3** tutor records matching your query."
+    )
+    assert res_valid["grounded"] is True
+    assert res_valid["status"] == "VERIFIED"
+    assert res_valid["reliability_score"] >= 90
+    assert res_valid["checks"]["entity_consistency"]["passed"] is True
+
+    # Mismatched row count claim
+    res_mismatch = AnswerVerifier.verify_answer(
+        user_query="List the tutors",
+        sql_query="SELECT section, tutor_name FROM sections",
+        columns=cols,
+        rows=rows,
+        row_count=3,
+        generated_answer="Found 12 tutor records matching your query."
+    )
+    assert res_mismatch["grounded"] is False
+    assert res_mismatch["status"] in ["UNVERIFIED", "NEEDS REVIEW"]
+    assert "Answer claims 12 records but the database returned 3" in res_mismatch["reason"]
+

@@ -94,6 +94,17 @@ def init_college_db():
     );
     """)
 
+    cursor.execute("""
+    CREATE TABLE sections (
+        section_id INTEGER PRIMARY KEY,
+        section TEXT NOT NULL,
+        tutor_name TEXT NOT NULL,
+        student_strength INTEGER NOT NULL,
+        aia_faculty TEXT NOT NULL,
+        dept_name TEXT NOT NULL
+    );
+    """)
+
     # Seed Departments
     departments = [
         (1, 'Computer Science and Engineering', 'Dr. Ramesh Kumar', 'Block A', 1500000.0),
@@ -103,6 +114,15 @@ def init_college_db():
         (5, 'Mechanical Engineering', 'Dr. Rajesh Patel', 'Block D', 1100000.0)
     ]
     cursor.executemany("INSERT INTO departments VALUES (?, ?, ?, ?, ?)", departments)
+
+    # Seed Sections
+    sections = [
+        (1, 'A', 'Mrs. Raashma', 82, 'Mrs. Raashma', 'Artificial Intelligence and Data Science'),
+        (2, 'B', 'Mrs. Malathi Sundaram', 82, 'Mrs. Malathi Sundaram', 'Artificial Intelligence and Data Science'),
+        (3, 'C', 'Dr. Kavitha Chandran', 80, 'Dr. Kavitha Chandran', 'Computer Science and Engineering'),
+        (4, 'D', 'Dr. Ananya Sharma', 78, 'Dr. Ananya Sharma', 'Artificial Intelligence and Data Science')
+    ]
+    cursor.executemany("INSERT INTO sections VALUES (?, ?, ?, ?, ?, ?)", sections)
 
     # Seed Students (top records specifically match PPT: Arun, Divya, Karthik, Meena, Rohit)
     students = [

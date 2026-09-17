@@ -35,7 +35,7 @@ class OfflineNLEngine:
         # A. College Records
         if "students" in table_map and "departments" in table_map:
             # Pattern: List all students / names in alphabetical order / student names
-            if ("student" in q_lower or "name" in q_lower or "all" in q_lower) and (is_alphabetical or "list" in q_lower or "show" in q_lower or "who are" in q_lower) and "attendance" not in q_lower and "cgpa" not in q_lower and "faculty" not in q_lower and "department" not in q_lower:
+            if ("student" in q_lower or "name" in q_lower or "all" in q_lower) and (is_alphabetical or "list" in q_lower or "show" in q_lower or "who are" in q_lower) and "attendance" not in q_lower and "cgpa" not in q_lower and "faculty" not in q_lower and "department" not in q_lower and "tutor" not in q_lower and "section" not in q_lower:
                 lim = limit if limit else 25
                 order = "ORDER BY s.name ASC" if is_alphabetical or "alphabetical" in q_lower or "name" in q_lower else "ORDER BY s.student_id ASC"
                 return {
@@ -139,8 +139,57 @@ GROUP BY d.dept_name
 ORDER BY student_count DESC;"""
                 }
 
-            # Pattern: List faculty by salary or department
+            # Pattern: Section tutor / Section details
+            if "tutor" in q_lower or ("section" in q_lower and "attendance" not in q_lower):
+                sec_match = re.search(r'\bsection\s+([a-zA-Z0-9])\b', q_lower)
+                if sec_match:
+                    sec_letter = sec_match.group(1).upper()
+                    return {
+                        "intent": "Filter Section Tutor",
+                        "entities": ["Sections", f"Section {sec_letter}", "Tutor"],
+                        "limit": 1,
+                        "sort_by": None,
+                        "sql": f"SELECT section, tutor_name, student_strength, aia_faculty, dept_name FROM sections WHERE section = '{sec_letter}';"
+                    }
+
+                letter_match = re.search(r'(?:first\s+letter\s+(?:is|with|as|of)?|start(?:s|ing)?\s+with)\s+([a-zA-Z])\b', q_lower)
+                if letter_match:
+                    letter = letter_match.group(1).upper()
+                    return {
+                        "intent": "Filter Tutors by Initial",
+                        "entities": ["Sections", "Tutors", f"Initial {letter}"],
+                        "limit": limit or 10,
+                        "sort_by": "Section ASC",
+                        "sql": f"""SELECT section, tutor_name, student_strength, aia_faculty, dept_name 
+FROM sections 
+WHERE tutor_name LIKE '{letter}%' OR tutor_name LIKE 'Mrs. {letter}%' OR tutor_name LIKE 'Dr. {letter}%' OR tutor_name LIKE 'Prof. {letter}%' 
+ORDER BY section ASC;"""
+                    }
+
+                return {
+                    "intent": "List Section Tutors",
+                    "entities": ["Sections", "Tutors"],
+                    "limit": limit or 10,
+                    "sort_by": "Section ASC",
+                    "sql": "SELECT section, tutor_name, student_strength, aia_faculty, dept_name FROM sections ORDER BY section ASC;"
+                }
+
+            # Pattern: List faculty by salary, department, or starting letter
             if "faculty" in q_lower or "professor" in q_lower or "teacher" in q_lower or "salary" in q_lower:
+                starts_with_m = re.search(r'(?:first\s+letter\s+(?:is|with|as|of)?|start(?:s|ing)?\s+with)\s+([a-zA-Z])\b', q_lower)
+                if starts_with_m:
+                    letter = starts_with_m.group(1).upper()
+                    return {
+                        "intent": "Filter Faculty by Initial",
+                        "entities": ["Faculty", f"Starts with {letter}"],
+                        "limit": limit or 10,
+                        "sort_by": "Name ASC",
+                        "sql": f"""SELECT f.name, f.designation, d.dept_name, f.salary, f.experience_years 
+FROM faculty f 
+JOIN departments d ON f.dept_id = d.dept_id 
+WHERE f.name LIKE '{letter}%' OR f.name LIKE 'Dr. {letter}%' OR f.name LIKE 'Prof. {letter}%' 
+ORDER BY f.name ASC LIMIT {limit or 10};"""
+                    }
                 order_col = "f.name ASC" if is_alphabetical else "f.salary DESC"
                 return {
                     "intent": "Filter and Sort Records",
@@ -437,15 +486,35 @@ ORDER BY b.amount DESC LIMIT 10;"""
                 order_clause = f' ORDER BY "{target_num}" ASC'
                 sort_by_label = f"{target_num} ASC"
 
-        # 3.4 Filter conditions (e.g., > 100, < 50, = "XYZ")
-        where_clause = ""
+        # 3.4 Filter conditions (numeric + text equality + starts with)
+        where_conditions = []
         comp_match = re.search(r'([><=]=?)\s*([0-9]+(?:\.[0-9]+)?)', q_lower)
         if comp_match and numeric_cols:
             op = comp_match.group(1)
             val = comp_match.group(2)
             target_num = matched_col if matched_col in numeric_cols else numeric_cols[0]
-            where_clause = f' WHERE "{target_num}" {op} {val}'
+            where_conditions.append(f'"{target_num}" {op} {val}')
 
+        # Text column specific matching (e.g. "section A", "for section A", "status = pending")
+        for tc in text_cols:
+            tc_low = tc.lower()
+            pattern = rf'\b{tc_low}\s*(?:is\s+|of\s+|for\s+|=)?\s*["\']?([a-zA-Z0-9_-]+)["\']?'
+            tc_match = re.search(pattern, q_lower)
+            if tc_match:
+                val = tc_match.group(1).strip()
+                if val.lower() not in ["the", "a", "of", "and", "in", "with", "all"]:
+                    where_conditions.append(f'LOWER("{tc}") = \'{val.lower()}\'')
+                elif val.upper() in ["A", "B", "C", "D", "E", "F"]:
+                    where_conditions.append(f'LOWER("{tc}") = \'{val.lower()}\'')
+
+        # Text starts with
+        starts_m = re.search(r'start(?:s|ing)?\s+with\s+([a-zA-Z])\b', q_lower)
+        if starts_m and (name_col or text_cols):
+            target_t = name_col if name_col else text_cols[0]
+            letter = starts_m.group(1).upper()
+            where_conditions.append(f'("{target_t}" LIKE \'{letter}%\' OR "{target_t}" LIKE \'%{letter}%\')')
+
+        where_clause = f" WHERE {' AND '.join(where_conditions)}" if where_conditions else ""
         lim_clause = f" LIMIT {limit}" if limit else " LIMIT 15"
         generated_sql = f'SELECT * FROM "{table_name}"{where_clause}{order_clause}{lim_clause};'
 
