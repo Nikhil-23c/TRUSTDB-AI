@@ -152,20 +152,20 @@ function Icon({ name, className = "w-4 h-4" }) {
 // CONSTANTS
 // =============================================================================
 const DEMO_QUESTIONS = [
-  { label: "Highest Attendance", query: "Who has the highest attendance?" },
-  { label: "0-Row Guard", query: "Show students with attendance above 100%" },
+  { label: "Section A Tutor", query: "Who is the tutor of section A?" },
   { label: "Dept Count", query: "How many students are in the AI department?" },
-  { label: "Section A Tutor", query: "List the tutor of section A" },
-  { label: "Faculty Name A", query: "Faculty name starts with A" },
+  { label: "0-Row Guard", query: "Show students with attendance above 100%." },
+  { label: "Highest Attendance", query: "Who has the highest attendance?" },
+  { label: "Tutors Initial A", query: "List the tutors who have names starting with A." },
 ];
 
 const CURATED_PROMPTS = {
   college_records: [
-    "Who has the highest attendance?",
-    "Show me students with attendance less than 75%",
+    "Who is the tutor of section A?",
     "How many students are in the AI department?",
-    "List the tutor of section A",
-    "What is the average attendance per section?",
+    "Show students with attendance above 100%.",
+    "Who has the highest attendance?",
+    "List the tutors who have names starting with A.",
   ],
   ecommerce_store: [
     "List all customers in alphabetical order",
@@ -737,7 +737,7 @@ function LoadingPanel({ stage }) {
     ),
     h('div', { className: 'space-y-1' },
       h('h3', { className: 'text-sm font-semibold text-[var(--text-primary)]' }, 'Processing your question...'),
-      h('p', { className: 'text-xs text-[var(--text-muted)]' }, 'PS7 → SQL → DB → PS2 Verification')
+      h('p', { className: 'text-xs text-[var(--text-muted)]' }, 'NL Question → Safe SQL → Database Execution → Grounding Verification')
     ),
     h('div', { className: 'grid grid-cols-4 gap-1.5' },
       stages.map(st =>
@@ -772,8 +772,8 @@ function WelcomePanel({ dbName }) {
     h('div', { className: 'grid grid-cols-3 gap-3' },
       [
         { icon: 'sparkles', label: 'Natural Language', desc: 'Ask in plain English' },
-        { icon: 'shieldCheck', label: 'Zero Hallucination', desc: 'PS2 verification layer' },
-        { icon: 'database', label: '100% Local', desc: 'Offline DB execution' },
+        { icon: 'shieldCheck', label: 'Evidence Grounded', desc: 'Verified against database evidence' },
+        { icon: 'database', label: 'Local Database', desc: 'Direct SQL execution' },
       ].map((f, i) =>
         h('div', { key: i, className: 'p-3.5 rounded-xl bg-[var(--bg-surface-soft)] border border-[var(--border-subtle)] space-y-1.5 text-center' },
           h('div', { className: 'flex justify-center' },
@@ -892,10 +892,10 @@ function HallucinationLabWorkspace({ activeDb, databases, showToast }) {
     h('div', { className: 'p-5 rounded-2xl luxury-card border-l-4 border-l-[var(--champagne)] space-y-1' },
       h('div', { className: 'inline-flex items-center space-x-2 px-2.5 py-1 rounded-full bg-[var(--champagne-dim)] text-[var(--champagne)] text-[10px] font-mono font-semibold uppercase tracking-widest' },
         h(Icon, { name: 'shieldZap', className: 'w-3 h-3' }),
-        h('span', null, 'PS2 HALLUCINATION LAB')
+        h('span', null, 'VERIFICATION LAB')
       ),
-      h('h2', { className: 'font-serif-luxury text-2xl font-normal text-[var(--text-primary)]' }, 'RED-TEAMING ARENA'),
-      h('p', { className: 'text-xs text-[var(--text-secondary)]' }, 'Submit a question + candidate answer. The PS2 engine verifies whether the answer is grounded in actual database evidence.')
+      h('h2', { className: 'font-serif-luxury text-2xl font-normal text-[var(--text-primary)]' }, 'HALLUCINATION TEST LAB'),
+      h('p', { className: 'text-xs text-[var(--text-secondary)]' }, 'Submit a question + candidate answer. The verification shield audits whether candidate claims are grounded in actual database evidence.')
     ),
 
     h('div', { className: 'grid grid-cols-1 lg:grid-cols-5 gap-6' },
@@ -925,7 +925,7 @@ function HallucinationLabWorkspace({ activeDb, databases, showToast }) {
           h('div', { className: 'space-y-1' },
             h('label', { className: 'text-[10px] font-mono text-[var(--text-muted)] uppercase font-semibold' }, 'Database'),
             h('select', { value: testDb, onChange: e => setTestDb(e.target.value), className: 'w-full bg-[var(--bg-surface-soft)] border border-[var(--border-subtle)] rounded-xl px-3 py-2 text-xs font-medium text-[var(--text-primary)] outline-none' },
-              databases.map(d => h('option', { key: d.id, value: d.id }, d.name))
+              databases.filter(d => d.id === 'college_records').concat(databases.filter(d => d.id !== 'college_records' && !d.id.startsWith('csv_'))).map(d => h('option', { key: d.id, value: d.id }, d.name))
             )
           ),
           h('div', { className: 'space-y-1' },
@@ -937,7 +937,7 @@ function HallucinationLabWorkspace({ activeDb, databases, showToast }) {
             h('textarea', { rows: 3, value: testAnswer, onChange: e => setTestAnswer(e.target.value), className: 'w-full bg-[var(--bg-surface-soft)] border border-[var(--border-subtle)] rounded-xl p-3 text-xs text-[var(--text-primary)] outline-none font-mono leading-relaxed resize-none' })
           ),
           h('button', { onClick: handleEvaluate, disabled: isEvaluating || !testAnswer.trim(), className: 'btn-champagne w-full py-2.5 rounded-xl text-xs font-bold disabled:opacity-40' },
-            isEvaluating ? 'Running shield...' : 'Run PS2 Hallucination Shield'
+            isEvaluating ? 'Running shield...' : 'Run Hallucination Shield'
           )
         )
       ),
@@ -948,7 +948,7 @@ function HallucinationLabWorkspace({ activeDb, databases, showToast }) {
           h('div', { className: `flex items-center space-x-3 p-3 rounded-xl border ${evaluationResult.hallucination_detected ? 'bg-[var(--danger-bg)] border-[var(--danger-border)]' : 'bg-[var(--verified-bg)] border-[var(--verified-border)]'}` },
             h(Icon, { name: evaluationResult.hallucination_detected ? 'shieldAlert' : 'shieldCheck', className: `w-5 h-5 ${evaluationResult.hallucination_detected ? 'text-[var(--danger)]' : 'text-[var(--verified)]'}` }),
             h('div', null,
-              h('p', { className: 'text-sm font-bold text-[var(--text-primary)]' }, evaluationResult.hallucination_detected ? 'Hallucination Intercepted' : '100% Grounded & Verified'),
+              h('p', { className: 'text-sm font-bold text-[var(--text-primary)]' }, evaluationResult.hallucination_detected ? 'Hallucination Intercepted' : 'Grounded & Verified in Evidence'),
               h('p', { className: 'text-[11px] font-mono text-[var(--text-muted)]' }, `Risk: ${evaluationResult.hallucination_risk_pct}% • ${evaluationResult.execution_time_ms}ms`)
             )
           ),
@@ -970,7 +970,7 @@ function HallucinationLabWorkspace({ activeDb, databases, showToast }) {
           h('p', { className: 'text-sm font-semibold text-[var(--text-primary)]' }, 'Running 6-layer hallucination shield...')
         ) : h('div', { className: 'luxury-card rounded-2xl p-8 space-y-4 text-center' },
           h(Icon, { name: 'shieldZap', className: 'w-8 h-8 text-[var(--champagne)] mx-auto' }),
-          h('h3', { className: 'font-serif-luxury text-lg text-[var(--text-primary)]' }, 'HOW PS2 CATCHES HALLUCINATIONS'),
+          h('h3', { className: 'font-serif-luxury text-lg text-[var(--text-primary)]' }, 'HOW THE SHIELD INTERCEPTS HALLUCINATIONS'),
           h('div', { className: 'grid grid-cols-2 gap-2 text-left' },
             [
               { num: '01', title: 'Zero-Row Guard', desc: 'Blocks invented records when DB returns 0 rows' },
@@ -1181,7 +1181,17 @@ function App() {
     };
   }, [queryHistory]);
 
-  const activeDatabaseObj = databases.find(d => d.id === activeDb) || { name: activeDb, table_count: 0 };
+  const CANONICAL_DB_IDS = ['college_records', 'ecommerce_store', 'healthcare'];
+  const canonicalDatabases = databases.filter(d => CANONICAL_DB_IDS.includes(d.id));
+  const visibleDatabases = canonicalDatabases.length > 0
+    ? canonicalDatabases
+    : [
+        { id: 'college_records', name: 'College & Student Records' },
+        { id: 'ecommerce_store', name: 'E-Commerce Online Store' },
+        { id: 'healthcare', name: 'Hospital & Healthcare Records' }
+      ];
+
+  const activeDatabaseObj = visibleDatabases.find(d => d.id === activeDb) || visibleDatabases[0];
   const curatedExamples = CURATED_PROMPTS[activeDb] || CURATED_PROMPTS.college_records;
 
   // ============================================================================
@@ -1213,7 +1223,6 @@ function App() {
           { id: 'explore', label: 'DATA LIBRARY', icon: 'database' },
           { id: 'history', label: 'AUDIT TRAIL', icon: 'history' },
           { id: 'insights', label: 'INSIGHTS', icon: 'activity' },
-          { id: 'hallucination', label: 'PS2 LAB', icon: 'shieldZap' },
         ].map(item =>
           h('button', {
             key: item.id,
@@ -1240,25 +1249,26 @@ function App() {
           title: theme === 'dark' ? 'Switch to Light' : 'Switch to Dark'
         }, h(Icon, { name: theme === 'dark' ? 'sun' : 'moon', className: 'w-4 h-4' })),
 
-        h('div', { className: 'flex items-center bg-[var(--bg-surface-soft)] border border-[var(--border-subtle)] rounded-lg px-2.5 py-1.5' },
-          h(Icon, { name: 'database', className: 'w-3 h-3 text-[var(--champagne)] mr-1.5' }),
+        h('div', { className: 'flex items-center space-x-1.5 bg-[var(--bg-surface-soft)] border border-[var(--border-subtle)] rounded-lg px-2.5 py-1.5' },
+          h('span', { className: 'text-[9px] font-mono font-bold text-[var(--text-muted)] uppercase mr-1' }, 'DATABASE'),
           h('select', {
             id: 'db-selector',
             value: activeDb,
             onChange: (e) => { setActiveDb(e.target.value); setCurrentResult(null); setQueryState('idle'); setActiveQuery(null); },
             className: 'bg-transparent text-xs font-semibold text-[var(--text-primary)] outline-none cursor-pointer'
-          }, databases.map(db => h('option', { key: db.id, value: db.id }, db.name)))
+          }, visibleDatabases.map(db => h('option', { key: db.id, value: db.id }, db.name)))
         ),
 
         h('div', { className: 'hidden sm:flex items-center space-x-1.5 bg-[var(--verified-bg)] border border-[var(--verified-border)] px-2.5 py-1.5 rounded-lg' },
           h('span', { className: 'w-1.5 h-1.5 rounded-full bg-[var(--verified)] animate-pulse-subtle' }),
-          h('span', { className: 'text-[9px] font-mono font-bold text-[var(--verified)] uppercase' }, 'Active')
+          h('span', { className: 'text-[9px] font-mono font-bold text-[var(--verified)] uppercase' }, 'ACTIVE')
         ),
 
         h('button', {
           id: 'settings-btn',
           onClick: () => setIsSettingsOpen(!isSettingsOpen),
-          className: 'p-2 rounded-lg bg-[var(--bg-surface-soft)] hover:bg-[var(--bg-surface-hover)] border border-[var(--border-subtle)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition'
+          className: 'p-2 rounded-lg bg-[var(--bg-surface-soft)] hover:bg-[var(--bg-surface-hover)] border border-[var(--border-subtle)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition',
+          title: 'Settings'
         }, h(Icon, { name: 'settings', className: 'w-4 h-4' }))
       )
     ),
@@ -1267,10 +1277,9 @@ function App() {
     h('div', { className: 'lg:hidden flex items-center justify-around bg-[var(--bg-surface)] border-b border-[var(--border-subtle)] py-1.5 text-[10px] font-semibold overflow-x-auto' },
       [
         { id: 'ask', label: 'Ask' },
-        { id: 'explore', label: 'Library' },
-        { id: 'history', label: 'Audit' },
+        { id: 'explore', label: 'Data Library' },
+        { id: 'history', label: 'Audit Trail' },
         { id: 'insights', label: 'Insights' },
-        { id: 'hallucination', label: 'PS2 Lab' },
       ].map(item =>
         h('button', {
           key: item.id,
@@ -1507,7 +1516,7 @@ function App() {
         h('div', { className: 'grid grid-cols-2 lg:grid-cols-4 gap-5' },
           [
             { label: "QUERIES ANSWERED", value: String(insightsMetrics.total || '0'), sub: "Natural language questions" },
-            { label: "VERIFIED RATE", value: insightsMetrics.verifiedPct, sub: "Zero-hallucination answers" },
+            { label: "VERIFIED RATE", value: insightsMetrics.verifiedPct, sub: "Grounded database answers" },
             { label: "AVG RELIABILITY", value: insightsMetrics.avgReliability, sub: "Score out of 100" },
             { label: "AVG RESPONSE TIME", value: insightsMetrics.avgLatency, sub: "End-to-end with verification" },
           ].map((m, i) =>
@@ -1519,12 +1528,12 @@ function App() {
           )
         ),
         h('div', { className: 'luxury-card rounded-2xl p-6 space-y-4' },
-          h('h3', { className: 'font-serif-luxury text-lg text-[var(--text-primary)]' }, 'HOW NEURA-X ENFORCES ZERO HALLUCINATION'),
+          h('h3', { className: 'font-serif-luxury text-lg text-[var(--text-primary)]' }, 'HOW NEURA-X VERIFIES GROUNDING'),
           h('div', { className: 'grid grid-cols-1 md:grid-cols-3 gap-5 text-xs' },
             [
               { num: '01', title: 'Read-Only Local Sandbox', desc: 'All SQL is enforced read-only. No writes, DDL, or data modifications ever execute.' },
               { num: '02', title: 'Grounding Verification Matrix', desc: 'Every number, entity, and aggregate in the answer is cross-checked against returned rows.' },
-              { num: '03', title: 'Zero Hallucination Guarantee', desc: 'Unsupported claims are flagged NEEDS REVIEW with detailed rationale.' },
+              { num: '03', title: 'Evidence-Grounded Defense', desc: 'Unsupported claims are flagged with transparent, mathematically verifiable audit rationale.' },
             ].map(l =>
               h('div', { key: l.num, className: 'space-y-1.5' },
                 h('span', { className: 'text-[var(--champagne)] font-mono font-bold text-[11px]' }, `${l.num}. ${l.title}`),
@@ -1536,7 +1545,7 @@ function App() {
       ),
 
       // =======================================================================
-      // PS2 HALLUCINATION LAB
+      // VERIFICATION LAB
       // =======================================================================
       activeTab === 'hallucination' && h(HallucinationLabWorkspace, {
         activeDb,
@@ -1552,7 +1561,7 @@ function App() {
         h('div', { className: 'flex items-center justify-between border-b border-[var(--border-subtle)] pb-4' },
           h('div', null,
             h('h3', { className: 'font-serif-luxury text-lg text-[var(--text-primary)]' }, 'CONFIGURATION'),
-            h('p', { className: 'text-xs text-[var(--text-secondary)] mt-0.5' }, 'LLM provider, theme, CSV import')
+            h('p', { className: 'text-xs text-[var(--text-secondary)] mt-0.5' }, 'Engine settings, theme, verification tools')
           ),
           h('button', { onClick: () => setIsSettingsOpen(false), className: 'text-[var(--text-muted)] hover:text-[var(--text-primary)] p-2 rounded-lg bg-[var(--bg-surface-soft)] text-lg leading-none' }, '✕')
         ),
@@ -1586,7 +1595,7 @@ function App() {
           h('div', null,
             h('label', { className: 'block text-[var(--text-muted)] font-mono uppercase tracking-wider mb-2 font-semibold text-[10px]' }, 'AI Engine'),
             h('select', { value: settingsData.llm_provider, onChange: e => setSettingsData({ ...settingsData, llm_provider: e.target.value }), className: 'w-full bg-[var(--bg-surface-soft)] border border-[var(--border-subtle)] rounded-xl px-3 py-2 text-[var(--text-primary)] outline-none focus:border-[var(--champagne)] font-medium' },
-              h('option', { value: 'offline' }, 'Smart Heuristic Engine (100% Offline — PS7)'),
+              h('option', { value: 'offline' }, 'Smart Heuristic Engine (Offline Local Engine)'),
               h('option', { value: 'gemini' }, 'Google Gemini API'),
               h('option', { value: 'openai' }, 'OpenAI API'),
               h('option', { value: 'ollama' }, 'Local Ollama')
@@ -1603,7 +1612,18 @@ function App() {
             h('input', { type: 'password', placeholder: 'sk-...', value: settingsData.openai_key_input, onChange: e => setSettingsData({ ...settingsData, openai_key_input: e.target.value }), className: 'w-full bg-[var(--bg-surface-soft)] border border-[var(--border-subtle)] rounded-xl px-3 py-2 text-[var(--text-primary)] outline-none focus:border-[var(--champagne)] font-mono' })
           ),
 
-          h('button', { type: 'submit', className: 'btn-champagne w-full py-2.5 rounded-xl font-bold' }, 'Save Configuration')
+          h('button', { type: 'submit', className: 'btn-champagne w-full py-2.5 rounded-xl font-bold' }, 'Save Configuration'),
+
+          h('div', { className: 'pt-2' },
+            h('button', {
+              type: 'button',
+              onClick: () => { setActiveTab('hallucination'); setIsSettingsOpen(false); },
+              className: 'w-full py-2.5 px-3 rounded-xl border border-[var(--champagne-border)] bg-[var(--champagne-dim)] text-[var(--champagne)] font-semibold text-xs flex items-center justify-center space-x-2 hover:bg-[var(--champagne-border)] transition'
+            },
+              h(Icon, { name: 'shieldZap', className: 'w-3.5 h-3.5' }),
+              h('span', null, 'Open Verification Lab')
+            )
+          )
         ),
 
         // CSV upload

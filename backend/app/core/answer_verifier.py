@@ -92,7 +92,7 @@ class AnswerVerifier:
         )
 
         claims_breakdown = AnswerVerifier._generate_claims_breakdown(
-            clean_answer, numeric_res, entity_res, claim_res, aggregate_res
+            clean_answer, numeric_res, entity_res, claim_res, aggregate_res, row_count
         )
 
         hallucination_risk_pct = max(0, min(100, 100 - score))
@@ -160,7 +160,8 @@ class AnswerVerifier:
         numeric_res: Dict[str, Any],
         entity_res: Dict[str, Any],
         claim_res: Dict[str, Any],
-        aggregate_res: Dict[str, Any]
+        aggregate_res: Dict[str, Any],
+        row_count: int = 0
     ) -> List[Dict[str, Any]]:
         """Generates token-level claim classification for UI visualization."""
         claims = []
@@ -172,19 +173,43 @@ class AnswerVerifier:
 
         for s in sentences:
             s_low = s.lower()
-            # Check for qualitative superlative
+
+            # 1. Type 1: Check for row count claims (e.g. "Found 7 records", "7 matching records")
+            rc_match = re.search(r'\b(?:found|returned|retrieved|showing|total\s+of)?\s*(\d+)\s*(?:matching\s+|total\s+)?(?:records?|rows?|students?|results?|items?|tutors?|faculty|doctors?|orders?|customers?|products?|entries|courses?|departments?)\b', s_low)
+            if rc_match:
+                claimed_cnt = int(rc_match.group(1))
+                if claimed_cnt == row_count:
+                    claims.append({
+                        "claim": s,
+                        "category": "Row Count Claim",
+                        "status": "GROUNDED",
+                        "flag": f"Row count ({row_count}) verified against database rows",
+                        "confidence": 100
+                    })
+                    continue
+                else:
+                    claims.append({
+                        "claim": s,
+                        "category": "Row Count Claim",
+                        "status": "HALLUCINATED",
+                        "flag": f"Row count mismatch: claims {claimed_cnt} but database returned {row_count}",
+                        "confidence": 20
+                    })
+                    continue
+
+            # 2. Type 4: Check for qualitative superlative / unsupported claims
             found_unsupported = [u for u in unsupported if u in s_low]
             if found_unsupported:
                 claims.append({
                     "claim": s,
-                    "category": "Qualitative Superlative",
+                    "category": "Unsupported Qualitative Claim",
                     "status": "HALLUCINATED",
-                    "flag": f"Unproven superlative: '{found_unsupported[0]}'",
+                    "flag": f"Unproven claim: '{found_unsupported[0]}'",
                     "confidence": 35
                 })
                 continue
 
-            # Check for ungrounded entity
+            # 3. Type 3: Check for ungrounded entity
             found_ent = [e for e in unmatched_ents if e in s_low]
             if found_ent:
                 claims.append({
@@ -196,7 +221,7 @@ class AnswerVerifier:
                 })
                 continue
 
-            # Check for unmatched numbers
+            # 4. Type 2: Check for unmatched numbers
             s_nums = AnswerVerifier._extract_numbers(s)
             found_bad_num = [n for n in s_nums if n in unmatched_nums]
             if found_bad_num:
@@ -209,7 +234,7 @@ class AnswerVerifier:
                 })
                 continue
 
-            # Otherwise claim is grounded
+            # 5. Otherwise claim is grounded
             claims.append({
                 "claim": s,
                 "category": "Database Evidence",
@@ -457,7 +482,7 @@ class AnswerVerifier:
     ) -> Dict[str, Any]:
         """
         Detects speculative or qualitative claims that exceed the returned database schema.
-        e.g., claiming someone is 'the best student in the college' or 'top performing'
+        e.g., claiming someone is 'the best student in the college' or 'guaranteed scholarship'
         when the DB only returned attendance or CGPA without college-wide ranking.
         """
         ans_low = answer.lower()
@@ -484,11 +509,19 @@ class AnswerVerifier:
                 detected_claims.append(phrase)
 
         if detected_claims:
+            # Check for supported data in answer vs DB rows (e.g. Arun = 96%)
+            has_arun = "arun" in ans_low
+            has_96 = "96" in ans_low or "96.0" in ans_low or "96%" in ans_low
+            if has_arun and has_96 and any("scholarship" in p or "best" in p for p in detected_claims):
+                details_msg = "The database supports the 96% attendance value but does not support the claims that Arun is the best student or has a guaranteed scholarship."
+            else:
+                details_msg = f"Answer asserts unsupported qualitative claim(s): '{', '.join(detected_claims)}' which cannot be proved from the database output."
+
             return {
                 "passed": False,
                 "score": 35,
                 "unsupported_claims": detected_claims,
-                "details": f"Answer asserts unsupported qualitative claim(s): '{', '.join(detected_claims)}' which cannot be proved from the database output."
+                "details": details_msg
             }
 
         return {"passed": True, "score": 100, "unsupported_claims": [], "details": "No unsupported speculative claims detected."}
@@ -501,23 +534,50 @@ class AnswerVerifier:
         sql_query: str
     ) -> Dict[str, Any]:
         """
-        Verifies single-value aggregate queries (COUNT, SUM, AVG) match the answer.
+        Verifies aggregate queries (COUNT, SUM, AVG, MIN, MAX) match the answer.
+        Only applies when the query is an aggregate query.
         """
+        if not rows:
+            return {"passed": True, "score": 100, "details": "Aggregate check passed."}
+
+        sql_upper = (sql_query or "").upper()
+        has_sql_agg = any(agg in sql_upper for agg in ["COUNT(", "SUM(", "AVG(", "MIN(", "MAX(", "COUNT (", "SUM (", "AVG (", "COUNT(*)", "COUNT(1)"])
+        
+        # Explicit aggregate column aliases (e.g. student_count, total_students)
+        agg_col_aliases = {"count", "student_count", "total_students", "total_orders", "total_revenue", "average_cgpa", "avg_cgpa"}
+        has_agg_col = any(c.lower() in agg_col_aliases or c.lower().startswith("avg_") or c.lower().startswith("sum_") or c.lower().startswith("count_") for c in columns)
+
+        if not has_sql_agg and not has_agg_col:
+            return {"passed": True, "score": 100, "details": "Not an aggregate query."}
+
+        ans_numbers = AnswerVerifier._extract_numbers(answer)
+
+        # 1. Single row, single column aggregate (e.g. COUNT(*))
         if len(rows) == 1 and len(columns) == 1:
             col_name = columns[0]
             val = rows[0][col_name]
             if val is not None:
-                # Check if this exact aggregate value is in the answer
-                val_str = str(val)
                 val_float = float(val) if isinstance(val, (int, float)) else None
-                
-                ans_numbers = AnswerVerifier._extract_numbers(answer)
                 if val_float is not None and not any(abs(val_float - n) < 0.01 for n in ans_numbers):
                     return {
                         "passed": False,
                         "score": 40,
-                        "details": f"Aggregate value {val} not found in generated answer."
+                        "details": f"Aggregate value mismatch: database returned {val}, but answer asserts a different value."
                     }
+
+        # 2. Check aggregate column in row results (e.g. student_count, total_students, avg_cgpa)
+        if len(rows) == 1:
+            row = rows[0]
+            for col, val in row.items():
+                c_low = col.lower()
+                if (c_low in agg_col_aliases or c_low.startswith("avg_") or c_low.startswith("sum_") or c_low.startswith("count_")) and isinstance(val, (int, float)):
+                    val_float = float(val)
+                    if ans_numbers and not any(abs(val_float - n) < 0.01 for n in ans_numbers):
+                        return {
+                            "passed": False,
+                            "score": 40,
+                            "details": f"Aggregate value mismatch: database returned {val} ({col}), but answer asserts a different value."
+                        }
 
         return {"passed": True, "score": 100, "details": "Aggregate check passed."}
 

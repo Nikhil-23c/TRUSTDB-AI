@@ -119,7 +119,8 @@ def init_college_db():
     sections = [
         (1, 'A', 'Mrs. Raashma', 82, 'Mrs. Raashma', 'Artificial Intelligence and Data Science'),
         (2, 'B', 'Mrs. Malathi Sundaram', 82, 'Mrs. Malathi Sundaram', 'Artificial Intelligence and Data Science'),
-        (3, 'C', 'Dr. Kavitha Chandran', 80, 'Dr. Kavitha Chandran', 'Computer Science and Engineering')
+        (3, 'C', 'Dr. Kavitha Chandran', 80, 'Dr. Kavitha Chandran', 'Computer Science and Engineering'),
+        (4, 'D', 'Dr. Ananya Sharma', 78, 'Dr. Ananya Sharma', 'Artificial Intelligence and Data Science')
     ]
     cursor.executemany("INSERT INTO sections VALUES (?, ?, ?, ?, ?, ?)", sections)
 

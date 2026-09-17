@@ -35,7 +35,7 @@ class OfflineNLEngine:
         # A. College Records
         if "students" in table_map and "departments" in table_map:
             # Pattern: List all students / names in alphabetical order / student names
-            if ("student" in q_lower or "name" in q_lower or "all" in q_lower) and (is_alphabetical or "list" in q_lower or "show" in q_lower or "who are" in q_lower) and "attendance" not in q_lower and "cgpa" not in q_lower and "faculty" not in q_lower and "department" not in q_lower:
+            if ("student" in q_lower or "name" in q_lower or "all" in q_lower) and (is_alphabetical or "list" in q_lower or "show" in q_lower or "who are" in q_lower) and "attendance" not in q_lower and "cgpa" not in q_lower and "faculty" not in q_lower and "department" not in q_lower and "tutor" not in q_lower and "section" not in q_lower:
                 lim = limit if limit else 25
                 order = "ORDER BY s.name ASC" if is_alphabetical or "alphabetical" in q_lower or "name" in q_lower else "ORDER BY s.student_id ASC"
                 return {
@@ -162,7 +162,7 @@ ORDER BY student_count DESC;"""
                         "sort_by": "Section ASC",
                         "sql": f"""SELECT section, tutor_name, student_strength, aia_faculty, dept_name 
 FROM sections 
-WHERE section = '{letter}' OR tutor_name LIKE '{letter}%' OR tutor_name LIKE 'Mrs. {letter}%' OR tutor_name LIKE 'Dr. {letter}%' 
+WHERE tutor_name LIKE '{letter}%' OR tutor_name LIKE 'Mrs. {letter}%' OR tutor_name LIKE 'Dr. {letter}%' OR tutor_name LIKE 'Prof. {letter}%' 
 ORDER BY section ASC;"""
                     }
 

@@ -17,7 +17,7 @@ class AppSettings(BaseModel):
     version: str = "1.0.0"
     
     # LLM Settings
-    llm_provider: str = os.getenv("LLM_PROVIDER", "gemini")  # gemini, openai, ollama, offline
+    llm_provider: str = os.getenv("LLM_PROVIDER", "offline")  # offline, gemini, openai, ollama
     gemini_api_key: str = os.getenv("GEMINI_API_KEY", "")
     openai_api_key: str = os.getenv("OPENAI_API_KEY", "")
     ollama_url: str = os.getenv("OLLAMA_URL", "http://localhost:11434")
