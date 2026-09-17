@@ -291,3 +291,42 @@ async def test_hallucination_benchmarks_and_candidate_test():
         telem_data = telem_res.json()
         assert "hallucination_prevention_rate" in telem_data
         assert len(telem_data["active_defense_layers"]) >= 5
+
+
+@pytest.mark.anyio
+async def test_row_count_claim_valid_and_mismatch():
+    """Tests distinguishing row count claims from entity hallucination."""
+    rows = [
+        {"section": "A", "tutor_name": "Mrs. Raashma"},
+        {"section": "B", "tutor_name": "Mrs. Malathi Sundaram"},
+        {"section": "C", "tutor_name": "Dr. Kavitha Chandran"}
+    ]
+    cols = ["section", "tutor_name"]
+
+    # Valid row count claim
+    res_valid = AnswerVerifier.verify_answer(
+        user_query="List the tutors",
+        sql_query="SELECT section, tutor_name FROM sections",
+        columns=cols,
+        rows=rows,
+        row_count=3,
+        generated_answer="Found **3** tutor records matching your query."
+    )
+    assert res_valid["grounded"] is True
+    assert res_valid["status"] == "VERIFIED"
+    assert res_valid["reliability_score"] >= 90
+    assert res_valid["checks"]["entity_consistency"]["passed"] is True
+
+    # Mismatched row count claim
+    res_mismatch = AnswerVerifier.verify_answer(
+        user_query="List the tutors",
+        sql_query="SELECT section, tutor_name FROM sections",
+        columns=cols,
+        rows=rows,
+        row_count=3,
+        generated_answer="Found 12 tutor records matching your query."
+    )
+    assert res_mismatch["grounded"] is False
+    assert res_mismatch["status"] in ["UNVERIFIED", "NEEDS REVIEW"]
+    assert "Answer claims 12 records but the database returned 3" in res_mismatch["reason"]
+

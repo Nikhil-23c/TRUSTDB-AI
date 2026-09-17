@@ -1,20 +1,18 @@
 /**
- * NEURA-X (TRUSTDB-AI): UNIFIED PS7 + PS2 HACKATHON WINNING PLATFORM
- * Merged Architecture:
- *   - PS7: Local Database Question-Answering System (No Third-Party API / 100% Offline)
- *   - PS2: AI Hallucination Detection & Reliability Scoring System
- * Features:
- *   - Tabular-First Database Results Grid with cell-level grounding provenance
- *   - 6-Layer Hallucination Interception & 0-100 Reliability Scoring
- *   - Live Dual-PS Arena & Benchmark Comparison
- *   - Dark Onyx & Light Porcelain Theme Engine
+ * NEURA-X: TRUSTED AI DATABASE ASSISTANT
+ * PS7: Natural-Language Database Question Answering (100% Offline)
+ * PS2: Hallucination Detection & Reliability Scoring
+ *
+ * Architecture: ASK → PROTECT → QUERY → VERIFY → TRUST
  */
 
-const { useState, useEffect, useRef, useMemo, createElement: h } = React;
+const { useState, useEffect, useRef, useMemo, useCallback, createElement: h } = React;
 
 const API_BASE = "";
 
-// Minimalist Luxury SVG Icon Set
+// =============================================================================
+// ICON LIBRARY
+// =============================================================================
 function Icon({ name, className = "w-4 h-4" }) {
   const icons = {
     sparkles: h('svg', { className, fill: 'none', stroke: 'currentColor', viewBox: '0 0 24 24' },
@@ -85,6 +83,9 @@ function Icon({ name, className = "w-4 h-4" }) {
     chevronRight: h('svg', { className, fill: 'none', stroke: 'currentColor', viewBox: '0 0 24 24' },
       h('polyline', { points: '9 18 15 12 9 6', strokeWidth: 1.5, strokeLinecap: 'round', strokeLinejoin: 'round' })
     ),
+    chevronLeft: h('svg', { className, fill: 'none', stroke: 'currentColor', viewBox: '0 0 24 24' },
+      h('polyline', { points: '15 18 9 12 15 6', strokeWidth: 1.5, strokeLinecap: 'round', strokeLinejoin: 'round' })
+    ),
     history: h('svg', { className, fill: 'none', stroke: 'currentColor', viewBox: '0 0 24 24' },
       h('circle', { cx: 12, cy: 12, r: 10, strokeWidth: 1.5 }),
       h('polyline', { points: '12 6 12 12 16 14', strokeWidth: 1.5, strokeLinecap: 'round' })
@@ -122,520 +123,743 @@ function Icon({ name, className = "w-4 h-4" }) {
     arrowUpRight: h('svg', { className, fill: 'none', stroke: 'currentColor', viewBox: '0 0 24 24' },
       h('line', { x1: 7, y1: 17, x2: 17, y2: 7, strokeWidth: 1.5, strokeLinecap: 'round', strokeLinejoin: 'round' }),
       h('polyline', { points: '7 7 17 7 17 17', strokeWidth: 1.5, strokeLinecap: 'round', strokeLinejoin: 'round' })
-    )
+    ),
+    search: h('svg', { className, fill: 'none', stroke: 'currentColor', viewBox: '0 0 24 24' },
+      h('circle', { cx: 11, cy: 11, r: 8, strokeWidth: 1.5 }),
+      h('path', { d: 'm21 21-4.35-4.35', strokeWidth: 1.5, strokeLinecap: 'round' })
+    ),
+    alertTriangle: h('svg', { className, fill: 'none', stroke: 'currentColor', viewBox: '0 0 24 24' },
+      h('path', { d: 'm10.29 3.86-8.37 14.5A2 2 0 0 0 3.63 21H20.37a2 2 0 0 0 1.71-3.02l-8.37-14.5a2 2 0 0 0-3.42.38z', strokeWidth: 1.5, strokeLinecap: 'round', strokeLinejoin: 'round' }),
+      h('line', { x1: 12, y1: 9, x2: 12, y2: 13, strokeWidth: 1.5, strokeLinecap: 'round' }),
+      h('line', { x1: 12, y1: 17, x2: 12.01, y2: 17, strokeWidth: 2, strokeLinecap: 'round' })
+    ),
+    flask: h('svg', { className, fill: 'none', stroke: 'currentColor', viewBox: '0 0 24 24' },
+      h('path', { d: 'M10 2v7.31l-3.7 5.39A4 4 0 0 0 9.53 21h4.94a4 4 0 0 0 3.23-6.3L14 9.31V2', strokeWidth: 1.5, strokeLinecap: 'round', strokeLinejoin: 'round' }),
+      h('line', { x1: 8.5, y1: 2, x2: 15.5, y2: 2, strokeWidth: 1.5, strokeLinecap: 'round' })
+    ),
+    upload: h('svg', { className, fill: 'none', stroke: 'currentColor', viewBox: '0 0 24 24' },
+      h('path', { d: 'M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4', strokeWidth: 1.5, strokeLinecap: 'round' }),
+      h('polyline', { points: '17 8 12 3 7 8', strokeWidth: 1.5, strokeLinecap: 'round', strokeLinejoin: 'round' }),
+      h('line', { x1: 12, x2: 12, y1: 3, y2: 15, strokeWidth: 1.5, strokeLinecap: 'round' })
+    ),
   };
-
   return icons[name] || h('svg', { className, fill: 'none', stroke: 'currentColor', viewBox: '0 0 24 24' },
     h('circle', { cx: 12, cy: 12, r: 10, strokeWidth: 1.5 })
   );
 }
 
-// Preset Prompts & Demo Scenarios for Live Evaluation
-const DEMO_SCENARIOS = [
-  {
-    id: "scenario_a",
-    badge: "PS7 + PS2 VERIFIED",
-    title: "Highest Attendance",
-    query: "Who has the highest attendance?",
-    desc: "Arun (96%) verified against actual attendance records.",
-    tag: "VERIFIED • 96/100",
-    color: "verified"
-  },
-  {
-    id: "scenario_b",
-    badge: "PS2 HALLUCINATION GUARD",
-    title: "Is Arun the Best Student?",
-    query: "Who has the highest attendance?",
-    simulate: "Arun has 96% attendance and is the best student in the college.",
-    desc: "Flags qualitative hallucination not proven in database.",
-    tag: "FLAGGED • 38/100",
-    color: "warning"
-  },
-  {
-    id: "scenario_c",
-    badge: "PS7 0-ROW SHIELD",
-    title: "Attendance > 100%",
-    query: "Show students with attendance above 100%",
-    desc: "Guards against hallucinating 0-row records.",
-    tag: "VERIFIED 0-ROW",
-    color: "champagne"
-  },
-  {
-    id: "scenario_d",
-    badge: "PS7 AGGREGATION",
-    title: "AI Department Count",
-    query: "How many students are in the AI department?",
-    desc: "Verifies mathematical aggregation against rows.",
-    tag: "VERIFIED • 96/100",
-    color: "verified"
-  }
+// =============================================================================
+// CONSTANTS
+// =============================================================================
+const DEMO_QUESTIONS = [
+  { label: "Highest Attendance", query: "Who has the highest attendance?" },
+  { label: "0-Row Guard", query: "Show students with attendance above 100%" },
+  { label: "Dept Count", query: "How many students are in the AI department?" },
+  { label: "Section A Tutor", query: "List the tutor of section A" },
+  { label: "Faculty Name A", query: "Faculty name starts with A" },
 ];
 
 const CURATED_PROMPTS = {
   college_records: [
     "Who has the highest attendance?",
-    "Show me the top 5 students with highest CGPA",
-    "List all students with attendance less than 75%",
+    "Show me students with attendance less than 75%",
     "How many students are in the AI department?",
-    "What is the average CGPA per department?"
+    "List the tutor of section A",
+    "What is the average attendance per section?",
   ],
   ecommerce_store: [
     "List all customers in alphabetical order",
     "What are the top 5 most expensive products?",
     "Total orders and revenue by order status",
-    "Customer count by membership tier"
+    "Customer count by membership tier",
   ],
   healthcare: [
     "List all doctors in alphabetical order",
     "List doctors ordered by experience years",
     "Show patient count by blood group",
-    "Total billing amount by payment status"
-  ]
+    "Total billing amount by payment status",
+  ],
 };
 
-// Markdown Formatter Component with Clean Theme Adaptation
+const PAGE_SIZE = 20;
+
+// =============================================================================
+// MARKDOWN RENDERER (lightweight)
+// =============================================================================
 function MarkdownEditorial({ text }) {
   if (!text) return null;
   const lines = text.split('\n');
-  return h('div', { className: 'space-y-2 text-[var(--text-primary)] font-normal leading-relaxed text-base' },
+  return h('div', { className: 'space-y-1.5 text-[var(--text-primary)] font-normal leading-relaxed' },
     lines.map((line, lIdx) => {
-      if (!line.trim()) return h('div', { key: lIdx, className: 'h-2' });
-
+      if (!line.trim()) return h('div', { key: lIdx, className: 'h-1' });
       const elements = [];
       let remaining = line;
       let key = 0;
-
       while (remaining.length > 0) {
         const boldMatch = remaining.match(/\*\*(.*?)\*\*/);
         const codeMatch = remaining.match(/`(.*?)`/);
-
         let firstMatch = null;
         let matchType = null;
-
         if (boldMatch && (!codeMatch || boldMatch.index < codeMatch.index)) {
-          firstMatch = boldMatch;
-          matchType = 'bold';
+          firstMatch = boldMatch; matchType = 'bold';
         } else if (codeMatch) {
-          firstMatch = codeMatch;
-          matchType = 'code';
+          firstMatch = codeMatch; matchType = 'code';
         }
-
         if (firstMatch) {
           const before = remaining.slice(0, firstMatch.index);
           if (before) elements.push(h('span', { key: key++ }, before));
-
-          if (matchType === 'bold') {
-            elements.push(h('strong', { key: key++, className: 'font-semibold text-[var(--text-primary)] underline decoration-[var(--champagne)]/50 decoration-1 underline-offset-4' }, firstMatch[1]));
-          } else if (matchType === 'code') {
-            elements.push(h('code', { key: key++, className: 'bg-[var(--bg-surface-soft)] px-1.5 py-0.5 rounded text-[var(--champagne)] font-mono text-xs border border-[var(--border-subtle)]' }, firstMatch[1]));
-          }
+          if (matchType === 'bold') elements.push(h('strong', { key: key++, className: 'font-semibold text-[var(--text-primary)]' }, firstMatch[1]));
+          else if (matchType === 'code') elements.push(h('code', { key: key++, className: 'bg-[var(--bg-surface-soft)] px-1.5 py-0.5 rounded text-[var(--champagne)] font-mono text-xs border border-[var(--border-subtle)]' }, firstMatch[1]));
           remaining = remaining.slice(firstMatch.index + firstMatch[0].length);
         } else {
           elements.push(h('span', { key: key++ }, remaining));
           break;
         }
       }
-
       return h('div', { key: lIdx }, elements);
     })
   );
 }
 
-// Visual Trust Chain Component
-function TrustChain({ verification, result }) {
-  const isVerified = verification?.grounded;
-  const status = verification?.status || "VERIFIED";
+// =============================================================================
+// VERIFICATION BADGE — compact, single instance
+// =============================================================================
+function VerificationBadge({ verification }) {
+  if (!verification) return null;
+  const { status, reliability_score, reason, grounded } = verification;
 
-  const stages = [
-    { label: "1. QUESTION", desc: "Natural Language Input", status: "COMPLETE" },
-    { label: "2. UNDERSTANDING", desc: result.intent || "Intent & Entity Extraction", status: "COMPLETE" },
-    { label: "3. SAFE SQL", desc: "Read-Only Enforced", status: "SAFE" },
-    { label: "4. DB EVIDENCE", desc: `${result.row_count} Rows Returned`, status: "PROVEN" },
-    { label: "5. AI ANSWER", desc: "Synthesized Output", status: "SYNTHESIZED" },
-    { label: "6. VERIFICATION", desc: status, status: isVerified ? "VERIFIED" : "FLAGGED" }
-  ];
+  let badgeClass = 'badge-verified-luxury';
+  let icon = 'shieldCheck';
+  if (status === 'MOSTLY VERIFIED') { badgeClass = 'badge-mostly-verified-luxury'; icon = 'shieldCheck'; }
+  else if (status === 'NEEDS REVIEW') { badgeClass = 'badge-warning-luxury'; icon = 'alertTriangle'; }
+  else if (status === 'UNVERIFIED') { badgeClass = 'badge-danger-luxury'; icon = 'shieldAlert'; }
 
-  return h('div', { className: 'p-5 rounded-2xl luxury-card space-y-4' },
-    h('div', { className: 'flex items-center justify-between' },
-      h('div', { className: 'space-y-0.5' },
-        h('span', { className: 'text-[10px] font-mono tracking-widest text-[var(--text-muted)] uppercase font-semibold' }, 'TRUST CHAIN & AUDIT PROOF'),
-        h('h4', { className: 'text-xs font-semibold text-[var(--text-primary)]' }, 'End-to-End Grounding Verification Pathway')
+  const scoreColor = reliability_score >= 90
+    ? 'text-[var(--verified)]'
+    : reliability_score >= 70
+    ? 'text-[var(--champagne)]'
+    : 'text-[var(--danger)]';
+
+  return h('div', { className: 'space-y-2' },
+    h('div', { className: 'flex flex-wrap items-center gap-2' },
+      h('div', { className: `inline-flex items-center space-x-1.5 px-3 py-1.5 rounded-lg text-xs font-bold ${badgeClass}` },
+        h(Icon, { name: icon, className: 'w-3.5 h-3.5' }),
+        h('span', null, status)
       ),
-      h('span', { className: 'text-[11px] font-mono text-[var(--text-secondary)] bg-[var(--bg-surface-soft)] px-2.5 py-1 rounded border border-[var(--border-subtle)]' },
-        `Latency: ${verification?.verification_latency_ms || 1.2}ms`
+      h('div', { className: 'flex items-center space-x-1.5 px-3 py-1.5 rounded-lg bg-[var(--bg-surface-soft)] border border-[var(--border-subtle)]' },
+        h('span', { className: 'text-[10px] font-mono text-[var(--text-muted)] uppercase font-semibold' }, 'Reliability'),
+        h('span', { className: `text-sm font-bold font-mono ${scoreColor}` }, `${reliability_score}`),
+        h('span', { className: 'text-[10px] text-[var(--text-muted)] font-mono' }, '/100')
+      ),
+      h('div', { className: 'flex items-center space-x-1.5 px-3 py-1.5 rounded-lg bg-[var(--verified-bg)] border border-[var(--verified-border)]' },
+        h('span', { className: 'w-1.5 h-1.5 rounded-full bg-[var(--verified)]' }),
+        h('span', { className: 'text-[10px] font-mono font-bold text-[var(--verified)] uppercase' }, 'READ-ONLY SAFE')
       )
     ),
-
-    h('div', { className: 'grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-2.5 pt-1' },
-      stages.map((st, i) => {
-        const isLast = i === stages.length - 1;
-        let badgeStyle = "bg-[var(--bg-surface-soft)] text-[var(--text-secondary)] border-[var(--border-subtle)]";
-
-        if (isLast) {
-          badgeStyle = isVerified ? "badge-verified-luxury font-bold" : "badge-warning-luxury font-bold";
-        } else if (st.status === "SAFE" || st.status === "PROVEN") {
-          badgeStyle = "bg-[var(--bg-surface-soft)] text-[var(--champagne)] border-[var(--champagne-border)]";
-        }
-
-        return h('div', { key: i, className: `p-2.5 rounded-xl border flex flex-col justify-between space-y-1 ${badgeStyle}` },
-          h('span', { className: 'text-[9px] font-mono font-semibold tracking-wider opacity-85' }, st.label),
-          h('p', { className: 'text-xs font-medium text-[var(--text-primary)] truncate' }, st.desc),
-          h('span', { className: 'text-[9px] font-mono uppercase tracking-widest' }, st.status)
-        );
-      })
-    )
+    reason && h('p', { className: 'text-xs text-[var(--text-secondary)] leading-relaxed pl-1' }, reason)
   );
 }
 
-// Verification Hero Badge & Score Card with Risk Meter
-function VerificationHeroPanel({ verification }) {
-  if (!verification) return null;
+// =============================================================================
+// DATA TABLE — bordered, sticky header, paginated, searchable
+// =============================================================================
+function DataTable({ columns, rows, highlightFirst = false }) {
+  const [search, setSearch] = useState('');
+  const [page, setPage] = useState(1);
 
-  const { status, reliability_score, reason, evidence, checks, claims_breakdown, hallucination_risk_pct, hallucination_risk_level } = verification;
-  const isVerified = status === "VERIFIED" || status === "MOSTLY VERIFIED";
+  // Reset page when rows/search change
+  useEffect(() => { setPage(1); }, [rows, search]);
 
-  let statusClass = "badge-verified-luxury";
-  let statusIcon = "shieldCheck";
-  if (status === "MOSTLY VERIFIED") {
-    statusClass = "badge-mostly-verified-luxury";
-  } else if (status === "NEEDS REVIEW") {
-    statusClass = "badge-warning-luxury";
-    statusIcon = "alertTriangle";
-  } else if (status === "UNVERIFIED") {
-    statusClass = "badge-danger-luxury";
-    statusIcon = "shieldAlert";
-  }
+  const filtered = useMemo(() => {
+    if (!search) return rows;
+    const q = search.toLowerCase();
+    return rows.filter(row =>
+      Object.values(row).some(v => String(v ?? '').toLowerCase().includes(q))
+    );
+  }, [rows, search]);
 
-  const riskPct = hallucination_risk_pct !== undefined ? hallucination_risk_pct : Math.max(0, 100 - reliability_score);
-  const riskLevel = hallucination_risk_level || (riskPct > 50 ? "CRITICAL" : riskPct > 20 ? "ELEVATED" : "MINIMAL");
+  const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
+  const paged = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
 
-  return h('div', { className: 'p-5 rounded-2xl luxury-card space-y-4 border-l-4 border-l-[var(--champagne)]' },
-    // Header Row with Reliability Score and Hallucination Risk Meter
-    h('div', { className: 'flex flex-wrap items-center justify-between gap-3' },
-      h('div', { className: 'flex items-center space-x-3' },
-        h('div', { className: `px-3.5 py-1.5 rounded-xl text-xs font-bold tracking-wider flex items-center space-x-2 ${statusClass}` },
-          h(Icon, { name: statusIcon, className: 'w-4 h-4' }),
-          h('span', null, status)
+  return h('div', { className: 'space-y-2' },
+
+    // Search + meta row
+    h('div', { className: 'flex flex-wrap items-center justify-between gap-2' },
+      h('div', { className: 'relative' },
+        h('div', { className: 'absolute inset-y-0 left-2.5 flex items-center pointer-events-none' },
+          h(Icon, { name: 'search', className: 'w-3.5 h-3.5 text-[var(--text-muted)]' })
         ),
-        h('span', { className: 'text-xs text-[var(--text-secondary)] font-medium' }, 'PS2 Verified: Grounded in database rows')
+        h('input', {
+          id: 'table-search',
+          type: 'text',
+          placeholder: 'Search records...',
+          value: search,
+          onChange: (e) => setSearch(e.target.value),
+          className: 'pl-7 pr-3 py-1.5 bg-[var(--bg-surface)] border border-[var(--border-subtle)] rounded-lg text-xs text-[var(--text-primary)] placeholder-[var(--text-muted)] outline-none focus:border-[var(--champagne)] w-44 sm:w-56 font-medium transition'
+        })
       ),
+      h('span', { className: 'text-[11px] font-mono text-[var(--text-muted)]' },
+        search
+          ? `${filtered.length} of ${rows.length} rows`
+          : `${rows.length} row${rows.length !== 1 ? 's' : ''}`
+      )
+    ),
 
-      // Score & Risk Badges
-      h('div', { className: 'flex items-center space-x-2.5' },
-        // Reliability score
-        h('div', { className: 'flex items-baseline space-x-2 bg-[var(--bg-surface-soft)] px-3 py-1.5 rounded-xl border border-[var(--border-subtle)]' },
-          h('span', { className: 'text-[10px] text-[var(--text-muted)] uppercase tracking-wider font-mono font-semibold' }, 'Reliability:'),
-          h('span', { className: `text-sm font-mono font-bold ${reliability_score >= 90 ? 'text-[var(--verified)]' : reliability_score >= 70 ? 'text-[var(--champagne)]' : 'text-[var(--danger)]'}` },
-            `${reliability_score}`
+    // Table container
+    h('div', { className: 'rounded-xl border border-[var(--border-medium)] overflow-hidden shadow-inner' },
+      h('div', { className: 'overflow-x-auto overflow-y-auto', style: { maxHeight: '280px' } },
+        h('table', { className: 'w-full text-left text-xs font-mono border-collapse' },
+          h('thead', null,
+            h('tr', { className: 'bg-[var(--bg-surface-soft)] border-b border-[var(--border-medium)] sticky top-0 z-10' },
+              columns.map((col, idx) =>
+                h('th', {
+                  key: idx,
+                  className: 'px-3 py-2.5 font-semibold text-[var(--text-secondary)] uppercase tracking-wider whitespace-nowrap text-[10px]',
+                  style: { borderRight: idx < columns.length - 1 ? '1px solid var(--border-subtle)' : 'none' }
+                }, col.replace(/_/g, ' '))
+              )
+            )
           ),
-          h('span', { className: 'text-[10px] text-[var(--text-muted)] font-mono' }, '/100')
-        ),
-
-        // Hallucination Risk Meter
-        h('div', { className: `flex items-baseline space-x-1.5 px-3 py-1.5 rounded-xl border font-mono ${riskPct > 50 ? 'bg-[var(--danger-bg)] border-[var(--danger-border)] text-[var(--danger)]' : 'bg-[var(--verified-bg)] border-[var(--verified-border)] text-[var(--verified)]'}` },
-          h('span', { className: 'text-[10px] uppercase tracking-wider font-semibold' }, 'Risk:'),
-          h('span', { className: 'text-sm font-bold' }, `${riskPct}%`),
-          h('span', { className: 'text-[9px] font-bold uppercase' }, `(${riskLevel})`)
+          h('tbody', { className: 'bg-[var(--bg-surface)] divide-y divide-[var(--border-subtle)]' },
+            paged.length === 0
+              ? h('tr', null,
+                  h('td', { colSpan: columns.length, className: 'px-3 py-8 text-center text-[var(--text-muted)] font-sans' },
+                    search ? 'No records match your search.' : 'No data returned.'
+                  )
+                )
+              : paged.map((row, rIdx) => {
+                  const isFirst = rIdx === 0 && (page === 1) && highlightFirst;
+                  return h('tr', {
+                    key: rIdx,
+                    className: `hover:bg-[var(--bg-surface-soft)] transition-colors ${isFirst ? 'row-evidence-highlight' : ''}`
+                  },
+                    columns.map((col, cIdx) =>
+                      h('td', {
+                        key: cIdx,
+                        className: 'px-3 py-2.5 text-[var(--text-primary)] whitespace-nowrap font-medium',
+                        style: { borderRight: cIdx < columns.length - 1 ? '1px solid var(--border-subtle)' : 'none' }
+                      },
+                        row[col] !== null && row[col] !== undefined
+                          ? String(row[col])
+                          : h('span', { className: 'text-[var(--text-muted)] italic' }, 'NULL')
+                      )
+                    )
+                  );
+                })
+          )
         )
       )
     ),
 
-    // Reason Statement
-    h('div', { className: 'space-y-1' },
-      h('span', { className: 'text-[10px] font-mono tracking-widest text-[var(--text-muted)] uppercase font-semibold' }, 'VERIFICATION RATIONALE & GROUNDING AUDIT'),
-      h('p', { className: 'text-xs text-[var(--text-primary)] font-medium leading-relaxed' }, reason)
-    ),
-
-    // Token-by-Token Claims Breakdown
-    claims_breakdown && claims_breakdown.length > 0 && h('div', { className: 'space-y-2 pt-2 border-t border-[var(--border-subtle)]' },
-      h('div', { className: 'flex items-center justify-between' },
-        h('span', { className: 'text-[10px] font-mono tracking-widest text-[var(--text-muted)] uppercase font-semibold' }, 'STATEMENT-LEVEL GROUNDING INSPECTOR'),
-        h('span', { className: 'text-[10px] font-mono text-[var(--champagne)]' }, `${claims_breakdown.length} Assertions Checked`)
+    // Pagination
+    totalPages > 1 && h('div', { className: 'flex items-center justify-between pt-1' },
+      h('button', {
+        onClick: () => setPage(p => Math.max(1, p - 1)),
+        disabled: page === 1,
+        className: 'flex items-center space-x-1 px-2.5 py-1.5 rounded-lg text-xs font-semibold btn-ghost-luxury disabled:opacity-40 disabled:cursor-not-allowed'
+      },
+        h(Icon, { name: 'chevronLeft', className: 'w-3.5 h-3.5' }),
+        h('span', null, 'Prev')
       ),
-      h('div', { className: 'space-y-1.5' },
-        claims_breakdown.map((c, idx) => {
-          const isGrounded = c.status === "GROUNDED";
-          return h('div', {
-            key: idx,
-            className: `p-2.5 rounded-xl border flex flex-col sm:flex-row sm:items-center justify-between text-xs gap-2 ${
-              isGrounded
-                ? 'bg-[var(--verified-bg)] border-[var(--verified-border)] text-[var(--text-primary)]'
-                : 'bg-[var(--danger-bg)] border-[var(--danger-border)] text-[var(--text-primary)]'
+      h('div', { className: 'flex items-center space-x-1' },
+        Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+          let pg = i + 1;
+          if (totalPages > 5) {
+            if (page <= 3) pg = i + 1;
+            else if (page >= totalPages - 2) pg = totalPages - 4 + i;
+            else pg = page - 2 + i;
+          }
+          return h('button', {
+            key: pg,
+            onClick: () => setPage(pg),
+            className: `w-7 h-7 rounded text-xs font-mono font-semibold transition ${
+              page === pg
+                ? 'bg-[var(--champagne)] text-[#0F172A]'
+                : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)] bg-[var(--bg-surface-soft)]'
             }`
-          },
-            h('div', { className: 'flex items-start space-x-2' },
-              h('span', { className: `mt-0.5 w-2 h-2 rounded-full shrink-0 ${isGrounded ? 'bg-[var(--verified)]' : 'bg-[var(--danger)]'}` }),
-              h('span', { className: 'font-medium' }, `"${c.claim}"`)
-            ),
-            h('div', { className: 'flex items-center space-x-2 shrink-0 self-end sm:self-center' },
-              h('span', { className: 'text-[10px] font-mono text-[var(--text-muted)]' }, c.category),
-              h('span', {
-                className: `text-[10px] font-mono font-bold px-2 py-0.5 rounded ${
-                  isGrounded ? 'bg-[var(--verified)] text-white' : 'bg-[var(--danger)] text-white'
-                }`
-              }, c.status)
-            )
-          );
+          }, pg);
         })
+      ),
+      h('button', {
+        onClick: () => setPage(p => Math.min(totalPages, p + 1)),
+        disabled: page === totalPages,
+        className: 'flex items-center space-x-1 px-2.5 py-1.5 rounded-lg text-xs font-semibold btn-ghost-luxury disabled:opacity-40 disabled:cursor-not-allowed'
+      },
+        h('span', null, 'Next'),
+        h(Icon, { name: 'chevronRight', className: 'w-3.5 h-3.5' })
       )
-    ),
-
-    // Sub-checks Grid
-    checks && h('div', { className: 'pt-2 border-t border-[var(--border-subtle)] grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2 text-xs' },
-      [
-        { key: "numeric_consistency", label: "Numeric Consistency" },
-        { key: "entity_consistency", label: "Entity Match" },
-        { key: "claim_grounding", label: "Superlative Filter" },
-        { key: "aggregate_consistency", label: "Aggregation Check" }
-      ].map(chk => {
-        const item = checks[chk.key];
-        const passed = item ? item.passed : true;
-        return h('div', { key: chk.key, className: 'p-2 rounded-lg bg-[var(--bg-surface-soft)] border border-[var(--border-subtle)] flex items-center justify-between' },
-          h('span', { className: 'text-[var(--text-secondary)] text-[10px] font-medium truncate mr-2' }, chk.label),
-          h('span', { className: `text-[9px] font-mono font-bold px-1.5 py-0.5 rounded ${passed ? 'text-[var(--verified)] bg-[var(--verified-bg)] border border-[var(--verified-border)]' : 'text-[var(--danger)] bg-[var(--danger-bg)] border border-[var(--danger-border)]'}` },
-            passed ? 'PASSED' : 'FLAGGED'
-          )
-        );
-      })
     )
   );
 }
 
-// Progressive Disclosure Collapsible Section
-function CollapsibleSection({ id, title, subtitle, icon, isOpen, onToggle, children, badge = null }) {
-  return h('div', { className: 'rounded-2xl luxury-card overflow-hidden transition-all' },
+// =============================================================================
+// TRUST PIPELINE — compact collapsible
+// =============================================================================
+function TrustPipelineDrawer({ trustPipeline, isOpen, onToggle }) {
+  if (!trustPipeline || trustPipeline.length === 0) return null;
+  const allPassed = trustPipeline.every(s => s.status !== 'ERROR' && s.status !== 'FAILED');
+  return h('div', { className: 'rounded-xl border border-[var(--border-subtle)] overflow-hidden' },
     h('button', {
       onClick: onToggle,
-      className: 'w-full px-5 py-3.5 flex items-center justify-between bg-[var(--bg-surface)] hover:bg-[var(--bg-surface-soft)] transition text-left'
+      className: 'w-full px-4 py-2.5 flex items-center justify-between bg-[var(--bg-surface)] hover:bg-[var(--bg-surface-soft)] transition text-left'
     },
-      h('div', { className: 'flex items-center space-x-3' },
-        h('div', { className: 'p-2 rounded-xl bg-[var(--bg-surface-soft)] text-[var(--champagne)] border border-[var(--border-subtle)]' },
-          h(Icon, { name: icon, className: 'w-4 h-4' })
-        ),
-        h('div', null,
-          h('div', { className: 'flex items-center space-x-2' },
-            h('h4', { className: 'text-xs font-semibold text-[var(--text-primary)]' }, title),
-            badge && h('span', { className: 'text-[10px] font-mono bg-[var(--bg-surface-soft)] text-[var(--text-secondary)] px-2 py-0.5 rounded border border-[var(--border-subtle)]' }, badge)
-          ),
-          subtitle && h('p', { className: 'text-[11px] text-[var(--text-muted)] mt-0.5' }, subtitle)
+      h('div', { className: 'flex items-center space-x-2' },
+        h(Icon, { name: 'shieldCheck', className: 'w-3.5 h-3.5 text-[var(--champagne)]' }),
+        h('span', { className: 'text-xs font-semibold text-[var(--text-primary)]' }, 'Trust Pipeline'),
+        h('span', { className: `text-[10px] font-mono px-2 py-0.5 rounded font-bold ${allPassed ? 'text-[var(--verified)] bg-[var(--verified-bg)]' : 'text-[var(--warning)] bg-[var(--warning-bg)]'}` },
+          `${trustPipeline.length} checks`
         )
       ),
-      h('div', { className: 'flex items-center space-x-2 text-[var(--text-muted)]' },
-        h('span', { className: 'text-xs font-mono' }, isOpen ? 'Collapse' : 'Expand'),
-        h(Icon, { name: isOpen ? 'chevronDown' : 'chevronRight', className: 'w-4 h-4' })
-      )
+      h(Icon, { name: isOpen ? 'chevronDown' : 'chevronRight', className: 'w-3.5 h-3.5 text-[var(--text-muted)]' })
     ),
-    isOpen && h('div', { className: 'p-5 border-t border-[var(--border-subtle)] bg-[var(--bg-surface-soft)]' }, children)
+    isOpen && h('div', { className: 'px-4 py-3 bg-[var(--bg-surface-soft)] border-t border-[var(--border-subtle)] space-y-1.5' },
+      trustPipeline.map((step, i) => {
+        const ok = step.status !== 'ERROR' && step.status !== 'FAILED' && step.status !== 'BLOCKED';
+        return h('div', { key: i, className: 'flex items-start space-x-2.5 text-xs' },
+          h('div', { className: `mt-0.5 w-4 h-4 rounded-full flex items-center justify-center shrink-0 text-[9px] font-bold ${ok ? 'bg-[var(--verified-bg)] text-[var(--verified)]' : 'bg-[var(--danger-bg)] text-[var(--danger)]'}` },
+            ok ? '✓' : '!'
+          ),
+          h('div', { className: 'flex-1 min-w-0' },
+            h('div', { className: 'flex items-center space-x-2' },
+              h('span', { className: 'font-semibold text-[var(--text-primary)]' }, step.name),
+              h('span', { className: `text-[9px] font-mono font-bold px-1.5 py-0.5 rounded ${ok ? 'text-[var(--verified)]' : 'text-[var(--danger)]'}` }, step.status)
+            ),
+            h('p', { className: 'text-[var(--text-muted)] text-[11px] leading-relaxed truncate' }, step.description)
+          )
+        );
+      })
+    )
   );
 }
 
-// ==============================================================================
-// WINNING HACKATHON MERGED SHOWCASE: PS7 + PS2 BATTLE ARENA
-// ==============================================================================
-function DualProblemStatementShowcase({ onRunDemoScenario }) {
-  const [selectedCase, setSelectedCase] = useState(0);
-
-  const testCases = [
-    {
-      title: "Case 1: 0-Row Phantom Guard (PS7 + PS2)",
-      query: "Show students with attendance greater than 100%",
-      naiveLlm: {
-        behavior: "Invented fictional students: 'Arun (105%) and Divya (102%)'",
-        flaw: "CRITICAL HALLUCINATION (Asserted records on 0-row result)",
-        offline: "Failed (Requires Cloud API)"
-      },
-      trustDb: {
-        behavior: "Returned 0 rows safely: 'No students found with attendance > 100%'",
-        defense: "Layer 1 Zero-Row Phantom Barrier Triggered • 100% Grounded",
-        offline: "100% Offline (Local SQLite AST Engine)"
-      }
+// =============================================================================
+// SQL DRAWER — collapsible
+// =============================================================================
+function SQLDrawer({ sql, intent, executionTimeMs, isOpen, onToggle, showToast }) {
+  if (!sql) return null;
+  return h('div', { className: 'rounded-xl border border-[var(--border-subtle)] overflow-hidden' },
+    h('button', {
+      onClick: onToggle,
+      className: 'w-full px-4 py-2.5 flex items-center justify-between bg-[var(--bg-surface)] hover:bg-[var(--bg-surface-soft)] transition text-left'
     },
-    {
-      title: "Case 2: Qualitative Superlative Filter (PS2)",
-      query: "Who has highest attendance? Is Arun the best student?",
-      naiveLlm: {
-        behavior: "Claims: 'Arun is the top student in the college with 100% scholarship.'",
-        flaw: "EXTRAPOLATION (DB only contains attendance %, not scholarship)",
-        offline: "Ungrounded Speculation"
-      },
-      trustDb: {
-        behavior: "Flags qualitative claim as NEEDS REVIEW (Reliability Score: 38/100)",
-        defense: "Layer 4 Qualitative Superlative Guard Intercepted",
-        offline: "Zero Data Leakage"
-      }
-    },
-    {
-      title: "Case 3: Mathematical Count Mutation (PS7)",
-      query: "How many students are in the AI department?",
-      naiveLlm: {
-        behavior: "Estimated: 'Around 45 students are in AI department.'",
-        flaw: "NUMERIC MUTATION (Actual database COUNT(*) is 5)",
-        offline: "Math Inconsistency"
-      },
-      trustDb: {
-        behavior: "Executed exact `SELECT COUNT(*) WHERE department='AI'` -> 5",
-        defense: "Layer 3 Strict Numeric Consistency & Layer 5 Aggregation Pass",
-        offline: "Sub-millisecond Local Execution"
-      }
-    }
-  ];
-
-  return h('div', { className: 'space-y-8 animate-entrance' },
-
-    // Top Winning Architecture Banner
-    h('div', { className: 'p-6 rounded-3xl luxury-card border-l-4 border-l-[var(--champagne)] space-y-4' },
-      h('div', { className: 'flex flex-wrap items-center justify-between gap-4' },
-        h('div', { className: 'space-y-1.5' },
-          h('div', { className: 'flex items-center space-x-2' },
-            h('span', { className: 'badge-ps7 text-[10px] px-2.5 py-1 rounded-full' }, 'PS7: LOCAL DB ENGINE'),
-            h('span', { className: 'text-sm text-[var(--champagne)] font-bold' }, '×'),
-            h('span', { className: 'badge-ps2 text-[10px] px-2.5 py-1 rounded-full' }, 'PS2: HALLUCINATION SHIELD'),
-            h('span', { className: 'badge-dual-merged text-[10px] px-2.5 py-1 rounded-full' }, 'HACKATHON WINNING MERGER')
-          ),
-          h('h2', { className: 'font-serif-luxury text-2xl sm:text-3xl text-[var(--text-primary)]' }, 'UNIFIED DUAL-ENGINE ARCHITECTURE'),
-          h('p', { className: 'text-xs text-[var(--text-secondary)] max-w-3xl leading-relaxed' },
-            'Most teams build either a simple Text-to-SQL bot (which hallucinates ungrounded answers) or a standalone evaluator (which lacks real DB integration). TRUSTDB-AI unifies both into a production-grade 100% offline database QA engine protected by a 6-layer hallucination barrier.'
-          )
-        ),
-        h('div', { className: 'flex items-center space-x-3' },
-          h('div', { className: 'p-3 rounded-2xl bg-[var(--bg-surface-soft)] border border-[var(--border-subtle)] text-center' },
-            h(Icon, { name: 'trophy', className: 'w-6 h-6 text-[var(--champagne)] mx-auto mb-1' }),
-            h('span', { className: 'text-[10px] font-mono text-[var(--text-muted)] uppercase block font-semibold' }, 'Capability Score'),
-            h('span', { className: 'text-lg font-bold font-mono text-[var(--champagne)]' }, '100 / 100')
-          )
-        )
-      )
-    ),
-
-    // Live Head-to-Head Arena Comparison Card
-    h('div', { className: 'p-6 rounded-3xl luxury-card space-y-6' },
-      h('div', { className: 'flex flex-wrap items-center justify-between gap-3 border-b border-[var(--border-subtle)] pb-4' },
-        h('div', null,
-          h('span', { className: 'text-[10px] font-mono tracking-widest text-[var(--champagne)] uppercase font-bold' }, 'HEAD-TO-HEAD BATTLE ARENA'),
-          h('h3', { className: 'font-serif-luxury text-xl text-[var(--text-primary)]' }, 'Standard LLM Text-to-SQL vs. TRUSTDB-AI Unified Solution')
-        ),
-        h('div', { className: 'flex items-center space-x-2' },
-          testCases.map((tc, idx) => h('button', {
-            key: idx,
-            onClick: () => setSelectedCase(idx),
-            className: `px-3 py-1.5 rounded-xl text-xs font-mono font-semibold transition ${
-              selectedCase === idx
-                ? 'bg-[var(--champagne)] text-[#0F172A] font-bold shadow'
-                : 'bg-[var(--bg-surface-soft)] text-[var(--text-secondary)] hover:text-[var(--text-primary)]'
-            }`
-          }, `Test ${idx + 1}`))
-        )
+      h('div', { className: 'flex items-center space-x-2' },
+        h(Icon, { name: 'code', className: 'w-3.5 h-3.5 text-[var(--champagne)]' }),
+        h('span', { className: 'text-xs font-semibold text-[var(--text-primary)]' }, 'Generated SQL'),
+        h('span', { className: 'text-[10px] font-mono text-[var(--text-muted)]' }, `${executionTimeMs}ms`)
       ),
-
-      // Test Scenario Header
-      h('div', { className: 'p-4 rounded-2xl bg-[var(--bg-surface-soft)] border border-[var(--border-subtle)] flex flex-wrap items-center justify-between gap-3' },
-        h('div', { className: 'space-y-0.5' },
-          h('span', { className: 'text-[10px] font-mono text-[var(--champagne)] uppercase font-bold' }, testCases[selectedCase].title),
-          h('p', { className: 'text-sm font-semibold text-[var(--text-primary)]' }, `"${testCases[selectedCase].query}"`)
-        ),
+      h(Icon, { name: isOpen ? 'chevronDown' : 'chevronRight', className: 'w-3.5 h-3.5 text-[var(--text-muted)]' })
+    ),
+    isOpen && h('div', { className: 'px-4 py-3 bg-[var(--bg-surface-soft)] border-t border-[var(--border-subtle)] space-y-3' },
+      h('div', { className: 'flex items-center justify-between' },
+        h('span', { className: 'text-[10px] font-mono text-[var(--text-muted)] uppercase font-semibold' }, `Intent: ${intent || 'Data Retrieval'}`),
         h('button', {
-          onClick: () => onRunDemoScenario(testCases[selectedCase].query),
-          className: 'btn-champagne px-4 py-2 rounded-xl text-xs font-bold flex items-center space-x-1.5 shadow'
+          onClick: () => { navigator.clipboard.writeText(sql); showToast('SQL copied.'); },
+          className: 'flex items-center space-x-1.5 text-[10px] font-mono text-[var(--champagne)] hover:underline'
         },
-          h(Icon, { name: 'send', className: 'w-3.5 h-3.5' }),
-          h('span', null, 'Run in Live Studio')
+          h(Icon, { name: 'copy', className: 'w-3 h-3' }),
+          h('span', null, 'Copy')
         )
       ),
+      h('pre', { className: 'sql-luxury-box p-3.5 text-xs font-mono overflow-x-auto leading-relaxed text-[var(--champagne)] rounded-xl' }, sql)
+    )
+  );
+}
 
-      // Side-by-Side Comparison Columns
-      h('div', { className: 'grid grid-cols-1 md:grid-cols-2 gap-6' },
+// =============================================================================
+// VERIFICATION CLAIMS DRAWER — collapsible PS2 detail
+// =============================================================================
+function VerificationDetailDrawer({ verification, isOpen, onToggle }) {
+  if (!verification) return null;
+  const { claims_breakdown, checks, evidence, hallucination_risk_pct, hallucination_risk_level } = verification;
+  const hasClaims = claims_breakdown && claims_breakdown.length > 0;
+  const hasChecks = checks && Object.keys(checks).length > 0;
+  const hasEvidence = evidence && evidence.length > 0;
 
-        // Left Column: Standard / Naive Solution (FAILS)
-        h('div', { className: 'p-5 rounded-2xl bg-[var(--danger-bg)] border border-[var(--danger-border)] space-y-4' },
-          h('div', { className: 'flex items-center space-x-2 pb-2 border-b border-[var(--danger-border)]' },
-            h(Icon, { name: 'xCircle', className: 'w-5 h-5 text-[var(--danger)]' }),
-            h('h4', { className: 'font-bold text-sm text-[var(--danger)]' }, 'STANDARD LLM / NAIVE RAG (FAILS)')
-          ),
-          h('div', { className: 'space-y-2 text-xs' },
-            h('div', { className: 'space-y-0.5' },
-              h('span', { className: 'text-[10px] font-mono text-[var(--text-muted)] uppercase' }, 'AI OUTPUT BEHAVIOR'),
-              h('p', { className: 'text-[var(--text-primary)] font-medium bg-[var(--bg-surface)] p-2.5 rounded-xl border border-[var(--border-subtle)]' },
-                testCases[selectedCase].naiveLlm.behavior
-              )
-            ),
-            h('div', { className: 'space-y-0.5' },
-              h('span', { className: 'text-[10px] font-mono text-[var(--danger)] uppercase font-bold' }, 'CRITICAL FLAW'),
-              h('p', { className: 'text-[var(--danger)] font-semibold' }, testCases[selectedCase].naiveLlm.flaw)
-            ),
-            h('div', { className: 'space-y-0.5' },
-              h('span', { className: 'text-[10px] font-mono text-[var(--text-muted)] uppercase' }, 'PS7 OFFLINE STATUS'),
-              h('p', { className: 'text-[var(--text-secondary)] font-mono' }, testCases[selectedCase].naiveLlm.offline)
-            )
-          )
-        ),
-
-        // Right Column: TRUSTDB-AI Unified Winner (WINS)
-        h('div', { className: 'p-5 rounded-2xl bg-[var(--verified-bg)] border border-[var(--verified-border)] space-y-4' },
-          h('div', { className: 'flex items-center space-x-2 pb-2 border-b border-[var(--verified-border)]' },
-            h(Icon, { name: 'checkCircle', className: 'w-5 h-5 text-[var(--verified)]' }),
-            h('h4', { className: 'font-bold text-sm text-[var(--verified)]' }, 'TRUSTDB-AI UNIFIED SOLUTION (WINS)')
-          ),
-          h('div', { className: 'space-y-2 text-xs' },
-            h('div', { className: 'space-y-0.5' },
-              h('span', { className: 'text-[10px] font-mono text-[var(--text-muted)] uppercase' }, 'PROTECTED SYSTEM OUTPUT'),
-              h('p', { className: 'text-[var(--text-primary)] font-medium bg-[var(--bg-surface)] p-2.5 rounded-xl border border-[var(--border-subtle)]' },
-                testCases[selectedCase].trustDb.behavior
-              )
-            ),
-            h('div', { className: 'space-y-0.5' },
-              h('span', { className: 'text-[10px] font-mono text-[var(--verified)] uppercase font-bold' }, 'PS2 HALLUCINATION DEFENSE'),
-              h('p', { className: 'text-[var(--verified)] font-semibold' }, testCases[selectedCase].trustDb.defense)
-            ),
-            h('div', { className: 'space-y-0.5' },
-              h('span', { className: 'text-[10px] font-mono text-[var(--champagne)] uppercase font-bold' }, 'PS7 OFFLINE ARCHITECTURE'),
-              h('p', { className: 'text-[var(--champagne)] font-mono font-bold' }, testCases[selectedCase].trustDb.offline)
-            )
-          )
-        )
-
-      )
+  return h('div', { className: 'rounded-xl border border-[var(--border-subtle)] overflow-hidden' },
+    h('button', {
+      onClick: onToggle,
+      className: 'w-full px-4 py-2.5 flex items-center justify-between bg-[var(--bg-surface)] hover:bg-[var(--bg-surface-soft)] transition text-left'
+    },
+      h('div', { className: 'flex items-center space-x-2' },
+        h(Icon, { name: 'shieldZap', className: 'w-3.5 h-3.5 text-[var(--champagne)]' }),
+        h('span', { className: 'text-xs font-semibold text-[var(--text-primary)]' }, 'Verification Detail'),
+        hallucination_risk_pct !== undefined && h('span', {
+          className: `text-[10px] font-mono px-2 py-0.5 rounded font-bold ${hallucination_risk_pct > 30 ? 'text-[var(--danger)] bg-[var(--danger-bg)]' : 'text-[var(--verified)] bg-[var(--verified-bg)]'}`
+        }, `${hallucination_risk_pct}% risk`)
+      ),
+      h(Icon, { name: isOpen ? 'chevronDown' : 'chevronRight', className: 'w-3.5 h-3.5 text-[var(--text-muted)]' })
     ),
+    isOpen && h('div', { className: 'px-4 py-3 bg-[var(--bg-surface-soft)] border-t border-[var(--border-subtle)] space-y-4' },
 
-    // Problem Statement Synergy Cards
-    h('div', { className: 'grid grid-cols-1 md:grid-cols-2 gap-6' },
-      h('div', { className: 'p-6 rounded-3xl luxury-card space-y-3 border-t-4 border-t-[var(--verified)]' },
-        h('div', { className: 'flex items-center space-x-2' },
-          h('span', { className: 'badge-ps7 text-xs px-3 py-1 rounded-full' }, 'PS7 PILLAR'),
-          h('h4', { className: 'font-bold text-sm text-[var(--text-primary)]' }, 'Local Database Question-Answering')
-        ),
-        h('ul', { className: 'space-y-2 text-xs text-[var(--text-secondary)] leading-relaxed list-disc list-inside' },
-          h('li', null, '100% Offline execution using AST SQL compiler & Local Ollama / SQLite sandbox.'),
-          h('li', null, 'Zero external API keys or cloud dependencies needed for full operations.'),
-          h('li', null, 'Complex schema navigation: multi-table JOINs, GROUP BY, aggregations, and subqueries.'),
-          h('li', null, 'Tabular-First delivery: instant CSV/JSON exports with column search & sort.')
+      // Evidence snippets
+      hasEvidence && h('div', { className: 'space-y-2' },
+        h('span', { className: 'text-[10px] font-mono text-[var(--text-muted)] uppercase font-semibold' }, 'DB Evidence Snippets'),
+        h('div', { className: 'flex flex-wrap gap-1.5' },
+          evidence.map((ev, i) =>
+            h('div', { key: i, className: 'bg-[var(--bg-surface)] border border-[var(--border-subtle)] px-2.5 py-1.5 rounded-lg text-[11px] font-mono flex items-center space-x-1.5' },
+              h('span', { className: 'w-1.5 h-1.5 rounded-full bg-[var(--champagne)] shrink-0' }),
+              h('span', { className: 'text-[var(--text-secondary)]' }, ev)
+            )
+          )
         )
       ),
 
-      h('div', { className: 'p-6 rounded-3xl luxury-card space-y-3 border-t-4 border-t-[var(--champagne)]' },
-        h('div', { className: 'flex items-center space-x-2' },
-          h('span', { className: 'badge-ps2 text-xs px-3 py-1 rounded-full' }, 'PS2 PILLAR'),
-          h('h4', { className: 'font-bold text-sm text-[var(--text-primary)]' }, 'Hallucination Detection & Reliability Scoring')
-        ),
-        h('ul', { className: 'space-y-2 text-xs text-[var(--text-secondary)] leading-relaxed list-disc list-inside' },
-          h('li', null, 'Deterministic 6-Layer verification barrier intercepts 100% of ungrounded assertions.'),
-          h('li', null, 'Calculates dynamic Reliability Score (0-100) and Hallucination Risk Probability (%).'),
-          h('li', null, 'Token-level claim highlighter tags grounded facts in green and hallucinations in red.'),
-          h('li', null, 'Live Red-Teaming Arena for adversarial stress testing and benchmark auditing.')
+      // Claims breakdown
+      hasClaims && h('div', { className: 'space-y-2' },
+        h('span', { className: 'text-[10px] font-mono text-[var(--text-muted)] uppercase font-semibold' }, `Statement Analysis — ${claims_breakdown.length} claims`),
+        h('div', { className: 'space-y-1.5' },
+          claims_breakdown.map((c, idx) => {
+            const ok = c.status === 'GROUNDED';
+            return h('div', {
+              key: idx,
+              className: `p-2.5 rounded-xl border flex items-center justify-between text-xs gap-2 ${ok ? 'bg-[var(--verified-bg)] border-[var(--verified-border)]' : 'bg-[var(--danger-bg)] border-[var(--danger-border)]'}`
+            },
+              h('div', { className: 'flex items-center space-x-2 min-w-0' },
+                h('span', { className: `w-1.5 h-1.5 rounded-full shrink-0 ${ok ? 'bg-[var(--verified)]' : 'bg-[var(--danger)]'}` }),
+                h('span', { className: 'font-medium text-[var(--text-primary)] truncate' }, `"${c.claim}"`)
+              ),
+              h('span', { className: `text-[10px] font-mono font-bold px-2 py-0.5 rounded shrink-0 ${ok ? 'bg-[var(--verified)] text-white' : 'bg-[var(--danger)] text-white'}` }, c.status)
+            );
+          })
+        )
+      ),
+
+      // Sub-checks grid
+      hasChecks && h('div', { className: 'space-y-2' },
+        h('span', { className: 'text-[10px] font-mono text-[var(--text-muted)] uppercase font-semibold' }, 'Grounding Checks'),
+        h('div', { className: 'grid grid-cols-2 gap-2' },
+          [
+            { key: "numeric_consistency", label: "Numeric Consistency" },
+            { key: "entity_consistency", label: "Entity Match" },
+            { key: "claim_grounding", label: "Superlative Filter" },
+            { key: "aggregate_consistency", label: "Aggregation Check" }
+          ].map(chk => {
+            const item = checks[chk.key];
+            const passed = item ? item.passed : true;
+            return h('div', { key: chk.key, className: 'p-2 rounded-lg bg-[var(--bg-surface)] border border-[var(--border-subtle)] flex items-center justify-between' },
+              h('span', { className: 'text-[var(--text-secondary)] text-[10px] font-medium truncate mr-2' }, chk.label),
+              h('span', { className: `text-[9px] font-mono font-bold px-1.5 py-0.5 rounded ${passed ? 'text-[var(--verified)] bg-[var(--verified-bg)]' : 'text-[var(--danger)] bg-[var(--danger-bg)]'}` },
+                passed ? 'PASS' : 'FLAG'
+              )
+            );
+          })
         )
       )
     )
-
   );
 }
 
-// ==============================================================================
-// 50% CORE COMPONENT: DEDICATED HALLUCINATION LAB & SHIELD WORKSPACE
-// ==============================================================================
-function HallucinationLabWorkspace({ activeDb, databases, showToast, onSendQueryToStudio }) {
+// =============================================================================
+// RESULT PANEL — the most important component
+// =============================================================================
+function ResultPanel({ result, activeQuery, exportCSV, exportJSON, showToast, theme }) {
+  const [openDrawer, setOpenDrawer] = useState(null); // 'sql' | 'verification' | 'trust'
+  const chartCanvasRef = useRef(null);
+  const chartInstanceRef = useRef(null);
+  const [showChart, setShowChart] = useState(false);
+
+  const toggleDrawer = (name) => setOpenDrawer(prev => prev === name ? null : name);
+
+  // Chart rendering
+  useEffect(() => {
+    if (showChart && result?.chart && chartCanvasRef.current) {
+      if (chartInstanceRef.current) chartInstanceRef.current.destroy();
+      try {
+        const ctx = chartCanvasRef.current.getContext('2d');
+        const isDark = theme === 'dark';
+        const textColor = isDark ? '#CBD5E1' : '#334155';
+        const gridColor = isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.06)';
+        const cd = { ...result.chart.data };
+        if (cd.datasets?.[0]) {
+          const ds = cd.datasets[0];
+          const t = result.chart.type;
+          if (t === 'bar') { ds.backgroundColor = 'rgba(198,167,107,0.75)'; ds.borderColor = '#C6A76B'; ds.borderWidth = 1; ds.borderRadius = 6; }
+          else if (t === 'line') { ds.borderColor = '#C6A76B'; ds.backgroundColor = 'rgba(198,167,107,0.15)'; ds.fill = true; ds.tension = 0.3; }
+          else if (t === 'doughnut' || t === 'pie') { ds.backgroundColor = ['#C6A76B','#7FA58C','#CBD5E1','#B99A62','#8E97A0']; ds.borderColor = isDark ? '#0B0D0F' : '#fff'; }
+        }
+        chartInstanceRef.current = new Chart(ctx, {
+          type: result.chart.type,
+          data: cd,
+          options: {
+            responsive: true, maintainAspectRatio: false,
+            animation: { duration: 500 },
+            plugins: { legend: { labels: { color: textColor, font: { family: 'Plus Jakarta Sans', size: 11 } } } },
+            scales: result.chart.type === 'doughnut' || result.chart.type === 'pie' ? {} : {
+              x: { grid: { color: gridColor }, ticks: { color: textColor, font: { size: 11 } } },
+              y: { grid: { color: gridColor }, ticks: { color: textColor, font: { size: 11 } } }
+            }
+          }
+        });
+      } catch (err) { console.error('Chart error:', err); }
+    }
+    return () => { if (chartInstanceRef.current) { chartInstanceRef.current.destroy(); chartInstanceRef.current = null; } };
+  }, [showChart, result, theme]);
+
+  if (!result) return null;
+
+  const { question, natural_answer, verification, columns, rows, row_count, sanitized_sql,
+          execution_time_ms, database_id, intent, trust_pipeline, chart } = result;
+
+  // The question displayed is always the activeQuery (the one that was submitted)
+  const displayQuestion = activeQuery || question;
+
+  const isEmpty = row_count === 0;
+
+  return h('div', { className: 'space-y-0 animate-entrance' },
+
+    // ── CARD ─────────────────────────────────────────────────────────────────
+    h('div', { className: 'rounded-2xl luxury-card overflow-hidden border border-[var(--border-subtle)]' },
+
+      // ── SECTION 1: USER QUESTION ────────────────────────────────────────
+      h('div', { className: 'px-5 pt-5 pb-3 border-b border-[var(--border-subtle)]' },
+        h('div', { className: 'flex items-center space-x-2 mb-1.5' },
+          h('span', { className: 'text-[10px] font-mono tracking-widest text-[var(--text-muted)] uppercase font-semibold' }, 'USER QUESTION')
+        ),
+        h('p', { className: 'text-sm font-semibold text-[var(--text-primary)] leading-snug' },
+          `"${displayQuestion}"`
+        ),
+        h('div', { className: 'mt-2 flex items-center space-x-2 text-[11px] font-mono text-[var(--text-muted)]' },
+          h(Icon, { name: 'database', className: 'w-3 h-3 text-[var(--champagne)]' }),
+          h('span', null, database_id),
+          h('span', null, '·'),
+          h('span', null, `${execution_time_ms}ms`)
+        )
+      ),
+
+      // ── SECTION 2: TRUSTED ANSWER ───────────────────────────────────────
+      h('div', { className: 'px-5 py-4 border-b border-[var(--border-subtle)]' },
+        h('div', { className: 'flex items-center space-x-2 mb-2' },
+          h('span', { className: 'text-[10px] font-mono tracking-widest text-[var(--champagne)] uppercase font-semibold' }, 'TRUSTED ANSWER')
+        ),
+        isEmpty
+          ? h('div', { className: 'flex items-center space-x-3 py-2' },
+              h('div', { className: 'p-2 rounded-lg bg-[var(--bg-surface-soft)] text-[var(--text-muted)]' },
+                h(Icon, { name: 'alertTriangle', className: 'w-4 h-4' })
+              ),
+              h('div', null,
+                h('p', { className: 'text-sm font-semibold text-[var(--text-primary)]' }, 'No Matching Data'),
+                h('p', { className: 'text-xs text-[var(--text-secondary)]' }, "We couldn't find any records matching this question.")
+              )
+            )
+          : h('div', { className: 'text-sm font-light text-[var(--text-primary)] leading-relaxed' },
+              h(MarkdownEditorial, { text: natural_answer })
+            )
+      ),
+
+      // ── SECTION 3: VERIFICATION STATUS ─────────────────────────────────
+      h('div', { className: 'px-5 py-3.5 border-b border-[var(--border-subtle)] bg-[var(--bg-surface-soft)]' },
+        h(VerificationBadge, { verification })
+      ),
+
+      // ── SECTION 4: EVIDENCE TABLE ───────────────────────────────────────
+      !isEmpty && h('div', { className: 'px-5 py-4 border-b border-[var(--border-subtle)]' },
+        h('div', { className: 'flex items-center justify-between mb-3' },
+          h('div', { className: 'flex items-center space-x-2' },
+            h('span', { className: 'text-[10px] font-mono tracking-widest text-[var(--text-muted)] uppercase font-semibold' }, 'EVIDENCE'),
+            h('span', { className: 'text-[10px] font-mono bg-[var(--bg-surface-soft)] text-[var(--text-secondary)] border border-[var(--border-subtle)] px-2 py-0.5 rounded font-semibold' },
+              `${row_count} row${row_count !== 1 ? 's' : ''}`
+            )
+          ),
+          h('div', { className: 'flex items-center space-x-1.5' },
+            h('button', {
+              onClick: exportCSV,
+              className: 'flex items-center space-x-1 btn-ghost-luxury px-2.5 py-1.5 rounded-lg text-[11px] font-semibold'
+            },
+              h(Icon, { name: 'download', className: 'w-3 h-3' }),
+              h('span', null, 'CSV')
+            ),
+            h('button', {
+              onClick: exportJSON,
+              className: 'btn-ghost-luxury px-2.5 py-1.5 rounded-lg text-[11px] font-semibold'
+            }, 'JSON'),
+            chart && h('button', {
+              onClick: () => setShowChart(v => !v),
+              className: `flex items-center space-x-1 px-2.5 py-1.5 rounded-lg text-[11px] font-semibold transition ${showChart ? 'bg-[var(--champagne)] text-[#0F172A]' : 'btn-ghost-luxury'}`
+            },
+              h(Icon, { name: 'chart', className: 'w-3 h-3' }),
+              h('span', null, 'Chart')
+            )
+          )
+        ),
+
+        // Chart (optional)
+        showChart && chart && h('div', { className: 'mb-3 w-full h-56 relative p-3 bg-[var(--bg-surface-soft)] rounded-xl border border-[var(--border-subtle)]' },
+          h('canvas', { ref: chartCanvasRef })
+        ),
+
+        h(DataTable, {
+          columns,
+          rows,
+          highlightFirst: verification?.grounded
+        })
+      ),
+
+      // ── SECTION 5: EXPANDABLE TECHNICAL DRAWERS ─────────────────────────
+      h('div', { className: 'px-5 py-3 space-y-2' },
+        h(SQLDrawer, {
+          sql: sanitized_sql,
+          intent,
+          executionTimeMs: execution_time_ms,
+          isOpen: openDrawer === 'sql',
+          onToggle: () => toggleDrawer('sql'),
+          showToast
+        }),
+        h(VerificationDetailDrawer, {
+          verification,
+          isOpen: openDrawer === 'verification',
+          onToggle: () => toggleDrawer('verification')
+        }),
+        h(TrustPipelineDrawer, {
+          trustPipeline: trust_pipeline,
+          isOpen: openDrawer === 'trust',
+          onToggle: () => toggleDrawer('trust')
+        })
+      )
+    )
+  );
+}
+
+// =============================================================================
+// LOADING STATE PANEL
+// =============================================================================
+function LoadingPanel({ stage }) {
+  const stages = [
+    { id: 1, label: 'Analyzing question' },
+    { id: 2, label: 'Checking safety' },
+    { id: 3, label: 'Querying database' },
+    { id: 4, label: 'Verifying answer' },
+  ];
+  return h('div', { className: 'rounded-2xl luxury-card p-8 text-center space-y-5 animate-entrance' },
+    h('div', { className: 'flex justify-center' },
+      h('div', { className: 'w-10 h-10 rounded-full bg-[var(--champagne-dim)] border border-[var(--champagne-border)] flex items-center justify-center' },
+        h('span', { className: 'w-3 h-3 rounded-full bg-[var(--champagne)] animate-ping' })
+      )
+    ),
+    h('div', { className: 'space-y-1' },
+      h('h3', { className: 'text-sm font-semibold text-[var(--text-primary)]' }, 'Processing your question...'),
+      h('p', { className: 'text-xs text-[var(--text-muted)]' }, 'PS7 → SQL → DB → PS2 Verification')
+    ),
+    h('div', { className: 'grid grid-cols-4 gap-1.5' },
+      stages.map(st =>
+        h('div', {
+          key: st.id,
+          className: `p-2 rounded-lg text-[10px] font-mono text-center transition-all ${
+            stage >= st.id
+              ? 'bg-[var(--champagne-dim)] text-[var(--champagne)] border border-[var(--champagne-border)] font-bold'
+              : 'bg-[var(--bg-surface-soft)] text-[var(--text-muted)] border border-[var(--border-subtle)]'
+          }`
+        }, `${st.label}${stage > st.id ? ' ✓' : stage === st.id ? '...' : ''}`)
+      )
+    )
+  );
+}
+
+// =============================================================================
+// IDLE/WELCOME STATE PANEL
+// =============================================================================
+function WelcomePanel({ dbName }) {
+  return h('div', { className: 'rounded-2xl luxury-card p-8 space-y-6 flex flex-col justify-center min-h-[340px]' },
+    h('div', { className: 'space-y-2' },
+      h('div', { className: 'inline-flex items-center space-x-2 px-3 py-1 rounded-full bg-[var(--verified-bg)] border border-[var(--verified-border)] text-[10px] font-mono text-[var(--verified)] font-bold' },
+        h('span', { className: 'w-1.5 h-1.5 rounded-full bg-[var(--verified)] animate-pulse-subtle' }),
+        h('span', null, 'READY TO QUERY')
+      ),
+      h('h2', { className: 'font-serif-luxury text-2xl font-normal text-[var(--text-primary)]' }, 'ASK YOUR DATA'),
+      h('p', { className: 'text-xs text-[var(--text-secondary)] leading-relaxed max-w-sm' },
+        'Ask a question in plain English and get an answer grounded in your database. Every claim is verified against actual query results.'
+      )
+    ),
+    h('div', { className: 'grid grid-cols-3 gap-3' },
+      [
+        { icon: 'sparkles', label: 'Natural Language', desc: 'Ask in plain English' },
+        { icon: 'shieldCheck', label: 'Zero Hallucination', desc: 'PS2 verification layer' },
+        { icon: 'database', label: '100% Local', desc: 'Offline DB execution' },
+      ].map((f, i) =>
+        h('div', { key: i, className: 'p-3.5 rounded-xl bg-[var(--bg-surface-soft)] border border-[var(--border-subtle)] space-y-1.5 text-center' },
+          h('div', { className: 'flex justify-center' },
+            h(Icon, { name: f.icon, className: 'w-4 h-4 text-[var(--champagne)]' })
+          ),
+          h('p', { className: 'text-[11px] font-semibold text-[var(--text-primary)]' }, f.label),
+          h('p', { className: 'text-[10px] text-[var(--text-muted)]' }, f.desc)
+        )
+      )
+    ),
+    h('div', { className: 'flex items-center space-x-2 text-xs font-mono text-[var(--text-muted)] bg-[var(--bg-surface-soft)] px-3 py-2 rounded-lg border border-[var(--border-subtle)]' },
+      h(Icon, { name: 'database', className: 'w-3.5 h-3.5 text-[var(--champagne)]' }),
+      h('span', null, 'Connected: '),
+      h('span', { className: 'text-[var(--text-primary)] font-semibold' }, dbName)
+    )
+  );
+}
+
+// =============================================================================
+// ERROR STATE PANEL
+// =============================================================================
+function ErrorPanel({ message, onRetry }) {
+  const [showDetail, setShowDetail] = useState(false);
+  return h('div', { className: 'rounded-2xl luxury-card p-6 space-y-3 border-l-4 border-l-[var(--danger)] animate-entrance' },
+    h('div', { className: 'flex items-center space-x-3' },
+      h(Icon, { name: 'xCircle', className: 'w-5 h-5 text-[var(--danger)]' }),
+      h('h3', { className: 'font-semibold text-sm text-[var(--text-primary)]' }, 'Unable to process this question')
+    ),
+    h('p', { className: 'text-xs text-[var(--text-secondary)] leading-relaxed' }, 'The system could not generate or execute a safe query for your question. Try rephrasing it.'),
+    h('div', { className: 'flex items-center space-x-2' },
+      onRetry && h('button', {
+        onClick: onRetry,
+        className: 'btn-champagne px-3.5 py-1.5 rounded-lg text-xs font-bold'
+      }, 'Try Again'),
+      h('button', {
+        onClick: () => setShowDetail(v => !v),
+        className: 'btn-ghost-luxury px-3 py-1.5 rounded-lg text-xs font-semibold'
+      }, showDetail ? 'Hide detail' : 'View technical detail')
+    ),
+    showDetail && message && h('pre', { className: 'sql-luxury-box p-3 text-[11px] font-mono overflow-x-auto text-[var(--danger)] rounded-xl' }, message)
+  );
+}
+
+// =============================================================================
+// DEMO LAB — collapsible, still calls backend
+// =============================================================================
+function DemoLab({ onRunQuery }) {
+  const [isOpen, setIsOpen] = useState(false);
+  return h('div', { className: 'rounded-xl border border-[var(--border-subtle)] overflow-hidden' },
+    h('button', {
+      onClick: () => setIsOpen(v => !v),
+      className: 'w-full px-4 py-3 flex items-center justify-between bg-[var(--bg-surface)] hover:bg-[var(--bg-surface-soft)] transition text-left'
+    },
+      h('div', { className: 'flex items-center space-x-2' },
+        h(Icon, { name: 'flask', className: 'w-3.5 h-3.5 text-[var(--champagne)]' }),
+        h('span', { className: 'text-xs font-semibold text-[var(--text-primary)]' }, 'Demo Lab'),
+        h('span', { className: 'text-[10px] font-mono text-[var(--text-muted)]' }, `${DEMO_QUESTIONS.length} scenarios`)
+      ),
+      h(Icon, { name: isOpen ? 'chevronDown' : 'chevronRight', className: 'w-3.5 h-3.5 text-[var(--text-muted)]' })
+    ),
+    isOpen && h('div', { className: 'px-4 py-3 bg-[var(--bg-surface-soft)] border-t border-[var(--border-subtle)] space-y-1.5' },
+      h('p', { className: 'text-[10px] text-[var(--text-muted)] font-mono pb-1' }, 'Click to run against live backend →'),
+      DEMO_QUESTIONS.map((d, i) =>
+        h('button', {
+          key: i,
+          onClick: () => onRunQuery(d.query),
+          className: 'w-full text-left flex items-center justify-between px-2.5 py-2 rounded-lg bg-[var(--bg-surface)] border border-[var(--border-subtle)] hover:border-[var(--champagne-border)] hover:bg-[var(--bg-surface-hover)] transition group text-xs'
+        },
+          h('div', { className: 'flex items-center space-x-2 min-w-0' },
+            h('span', { className: 'text-[10px] font-mono text-[var(--champagne)] font-bold shrink-0' }, `#${i + 1}`),
+            h('span', { className: 'text-[var(--text-secondary)] group-hover:text-[var(--text-primary)] truncate font-medium' }, d.query)
+          ),
+          h(Icon, { name: 'arrowUpRight', className: 'w-3 h-3 text-[var(--text-muted)] group-hover:text-[var(--champagne)] shrink-0 ml-2' })
+        )
+      )
+    )
+  );
+}
+
+// =============================================================================
+// HALLUCINATION LAB (PS2 Red-Teaming) — kept as separate tab
+// =============================================================================
+function HallucinationLabWorkspace({ activeDb, databases, showToast }) {
   const [benchmarks, setBenchmarks] = useState([]);
   const [telemetry, setTelemetry] = useState(null);
   const [selectedBenchmark, setSelectedBenchmark] = useState(null);
-
   const [testQuestion, setTestQuestion] = useState("Who has the highest attendance?");
   const [testAnswer, setTestAnswer] = useState("Arun has 96% attendance and is the best student in the college with 100% scholarship.");
   const [testDb, setTestDb] = useState("college_records");
@@ -643,340 +867,157 @@ function HallucinationLabWorkspace({ activeDb, databases, showToast, onSendQuery
   const [evaluationResult, setEvaluationResult] = useState(null);
 
   useEffect(() => {
-    fetchBenchmarks();
-    fetchTelemetry();
+    fetch(`${API_BASE}/api/hallucination/benchmarks`).then(r => r.ok ? r.json() : null).then(d => {
+      if (d?.scenarios) { setBenchmarks(d.scenarios); if (d.scenarios[0]) loadBenchmark(d.scenarios[0]); }
+    }).catch(() => {});
+    fetch(`${API_BASE}/api/hallucination/telemetry`).then(r => r.ok ? r.json() : null).then(d => { if (d) setTelemetry(d); }).catch(() => {});
   }, []);
 
-  const fetchBenchmarks = async () => {
-    try {
-      const res = await fetch(`${API_BASE}/api/hallucination/benchmarks`);
-      if (res.ok) {
-        const data = await res.json();
-        setBenchmarks(data.scenarios || []);
-        if (data.scenarios && data.scenarios.length > 0) {
-          loadBenchmarkScenario(data.scenarios[0]);
-        }
-      }
-    } catch (e) { console.error(e); }
-  };
+  const loadBenchmark = (sc) => { setSelectedBenchmark(sc); setTestQuestion(sc.question); setTestAnswer(sc.hallucinated_answer); setTestDb(sc.database_id); setEvaluationResult(null); };
 
-  const fetchTelemetry = async () => {
-    try {
-      const res = await fetch(`${API_BASE}/api/hallucination/telemetry`);
-      if (res.ok) {
-        const data = await res.json();
-        setTelemetry(data);
-      }
-    } catch (e) { console.error(e); }
-  };
-
-  const loadBenchmarkScenario = (sc) => {
-    setSelectedBenchmark(sc);
-    setTestQuestion(sc.question);
-    setTestAnswer(sc.hallucinated_answer);
-    setTestDb(sc.database_id);
-    setEvaluationResult(null);
-  };
-
-  const handleEvaluate = async (q = testQuestion, ans = testAnswer, db = testDb) => {
-    setIsEvaluating(true);
-    setEvaluationResult(null);
+  const handleEvaluate = async () => {
+    setIsEvaluating(true); setEvaluationResult(null);
     try {
       const res = await fetch(`${API_BASE}/api/hallucination/test-candidate`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          question: q,
-          database_id: db,
-          candidate_answer: ans
-        })
+        method: "POST", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ question: testQuestion, database_id: testDb, candidate_answer: testAnswer })
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.detail || "Evaluation failed");
       setEvaluationResult(data);
-      fetchTelemetry();
-    } catch (err) {
-      showToast(`Evaluation Error: ${err.message}`);
-    } finally {
-      setIsEvaluating(false);
-    }
+    } catch (err) { showToast(`Error: ${err.message}`); } finally { setIsEvaluating(false); }
   };
 
-  return h('div', { className: 'space-y-8 animate-entrance' },
-
-    // Header Banner
-    h('div', { className: 'p-6 rounded-2xl luxury-card border-l-4 border-l-[var(--champagne)] space-y-2' },
-      h('div', { className: 'flex flex-wrap items-center justify-between gap-4' },
-        h('div', { className: 'space-y-1' },
-          h('div', { className: 'inline-flex items-center space-x-2 px-3 py-1 rounded-full bg-[var(--champagne-dim)] text-[var(--champagne)] text-[10px] font-mono uppercase tracking-widest font-semibold' },
-            h(Icon, { name: 'shieldZap', className: 'w-3.5 h-3.5' }),
-            h('span', null, 'PS2: ZERO-HALLUCINATION DEFENSE SYSTEM • 50% CORE ARCHITECTURE')
-          ),
-          h('h2', { className: 'font-serif-luxury text-2xl sm:text-3xl font-normal text-[var(--text-primary)]' }, 'HALLUCINATION LAB & RED-TEAMING ARENA'),
-          h('p', { className: 'text-xs text-[var(--text-secondary)] max-w-2xl' },
-            'Adversarial testing environment to simulate AI hallucinations, stress-test grounding algorithms, and verify that 0% ungrounded claims reach end users.'
-          )
-        ),
-        h('div', { className: 'flex items-center space-x-3' },
-          h('div', { className: 'bg-[var(--verified-bg)] border border-[var(--verified-border)] px-4 py-2 rounded-xl text-center' },
-            h('span', { className: 'text-[10px] font-mono text-[var(--text-muted)] uppercase block font-semibold' }, 'Prevention Rate'),
-            h('span', { className: 'text-xl font-bold font-mono text-[var(--verified)]' }, telemetry?.hallucination_prevention_rate || '100%')
-          ),
-          h('div', { className: 'bg-[var(--bg-surface-soft)] border border-[var(--border-subtle)] px-4 py-2 rounded-xl text-center' },
-            h('span', { className: 'text-[10px] font-mono text-[var(--text-muted)] uppercase block font-semibold' }, 'Precision'),
-            h('span', { className: 'text-xl font-bold font-mono text-[var(--champagne)]' }, telemetry?.grounding_precision || '99.4%')
-          )
-        )
-      )
+  return h('div', { className: 'space-y-6 animate-entrance' },
+    h('div', { className: 'p-5 rounded-2xl luxury-card border-l-4 border-l-[var(--champagne)] space-y-1' },
+      h('div', { className: 'inline-flex items-center space-x-2 px-2.5 py-1 rounded-full bg-[var(--champagne-dim)] text-[var(--champagne)] text-[10px] font-mono font-semibold uppercase tracking-widest' },
+        h(Icon, { name: 'shieldZap', className: 'w-3 h-3' }),
+        h('span', null, 'PS2 HALLUCINATION LAB')
+      ),
+      h('h2', { className: 'font-serif-luxury text-2xl font-normal text-[var(--text-primary)]' }, 'RED-TEAMING ARENA'),
+      h('p', { className: 'text-xs text-[var(--text-secondary)]' }, 'Submit a question + candidate answer. The PS2 engine verifies whether the answer is grounded in actual database evidence.')
     ),
 
-    // MAIN 2-COLUMN LAB LAYOUT
-    h('div', { className: 'grid grid-cols-1 lg:grid-cols-12 gap-6 items-start' },
+    h('div', { className: 'grid grid-cols-1 lg:grid-cols-5 gap-6' },
 
-      // LEFT: ATTACK SUITE & INPUT FORM (lg:col-span-5)
-      h('div', { className: 'lg:col-span-5 space-y-4' },
-
-        // Preset Adversarial Scenarios
-        h('div', { className: 'p-5 rounded-2xl luxury-card space-y-3' },
-          h('div', { className: 'flex items-center justify-between' },
-            h('span', { className: 'text-[10px] font-mono tracking-widest text-[var(--champagne)] uppercase font-semibold' }, 'ADVERSARIAL ATTACK BENCHMARKS'),
-            h('span', { className: 'text-[10px] font-mono text-[var(--text-muted)]' }, `${benchmarks.length} Scenarios`)
-          ),
-          h('div', { className: 'space-y-2 max-h-72 overflow-y-auto pr-1' },
-            benchmarks.map(sc => {
-              const isSelected = selectedBenchmark?.id === sc.id;
-              return h('button', {
+      // Left: form
+      h('div', { className: 'lg:col-span-2 space-y-4' },
+        benchmarks.length > 0 && h('div', { className: 'luxury-card rounded-2xl p-4 space-y-2' },
+          h('span', { className: 'text-[10px] font-mono text-[var(--champagne)] uppercase font-bold' }, `${benchmarks.length} Attack Benchmarks`),
+          h('div', { className: 'space-y-1.5 max-h-52 overflow-y-auto' },
+            benchmarks.map(sc =>
+              h('button', {
                 key: sc.id,
-                onClick: () => loadBenchmarkScenario(sc),
-                className: `w-full text-left p-3 rounded-xl border transition flex flex-col justify-between space-y-1 ${
-                  isSelected
-                    ? 'bg-[var(--champagne-dim)] border-[var(--champagne-border)] text-[var(--text-primary)]'
-                    : 'bg-[var(--bg-surface-soft)] border-[var(--border-subtle)] hover:border-[var(--border-medium)] text-[var(--text-secondary)]'
-                }`
+                onClick: () => loadBenchmark(sc),
+                className: `w-full text-left p-2.5 rounded-xl border transition text-xs ${selectedBenchmark?.id === sc.id ? 'bg-[var(--champagne-dim)] border-[var(--champagne-border)]' : 'bg-[var(--bg-surface-soft)] border-[var(--border-subtle)] hover:border-[var(--border-medium)]'}`
               },
                 h('div', { className: 'flex items-center justify-between' },
-                  h('span', { className: 'text-[10px] font-mono text-[var(--champagne)] font-semibold' }, sc.category),
-                  h('span', { className: `text-[9px] font-mono px-2 py-0.5 rounded font-bold ${sc.severity === 'CRITICAL' ? 'bg-[var(--danger-bg)] text-[var(--danger)]' : 'bg-[var(--warning-bg)] text-[var(--warning)]'}` }, sc.severity)
-                ),
-                h('h4', { className: 'text-xs font-semibold text-[var(--text-primary)]' }, sc.title),
-                h('p', { className: 'text-[11px] text-[var(--text-muted)] line-clamp-1' }, sc.attack_vector)
-              );
-            })
+                  h('span', { className: 'font-semibold text-[var(--text-primary)]' }, sc.title),
+                  h('span', { className: `text-[9px] font-mono font-bold px-1.5 rounded ${sc.severity === 'CRITICAL' ? 'bg-[var(--danger-bg)] text-[var(--danger)]' : 'bg-[var(--warning-bg)] text-[var(--warning)]'}` }, sc.severity)
+                )
+              )
+            )
           )
         ),
 
-        // Interactive Red-Teaming Playground Form
-        h('div', { className: 'p-5 rounded-2xl luxury-card space-y-4' },
-          h('div', { className: 'flex items-center justify-between' },
-            h('span', { className: 'text-[10px] font-mono tracking-widest text-[var(--text-muted)] uppercase font-semibold' }, 'LIVE ATTACK INJECTION CANVAS'),
-            h('span', { className: 'text-[10px] font-mono text-[var(--verified)]' }, 'Real-time Verifier')
-          ),
-
-          // Database Selector
+        h('div', { className: 'luxury-card rounded-2xl p-4 space-y-3' },
+          h('span', { className: 'text-[10px] font-mono text-[var(--text-muted)] uppercase font-semibold' }, 'Test Input'),
           h('div', { className: 'space-y-1' },
-            h('label', { className: 'text-[10px] font-mono text-[var(--text-muted)] uppercase font-semibold' }, 'Target Database'),
-            h('select', {
-              value: testDb,
-              onChange: (e) => setTestDb(e.target.value),
-              className: 'w-full bg-[var(--bg-surface-soft)] border border-[var(--border-subtle)] rounded-xl px-3 py-2 text-xs font-medium text-[var(--text-primary)] outline-none'
-            },
+            h('label', { className: 'text-[10px] font-mono text-[var(--text-muted)] uppercase font-semibold' }, 'Database'),
+            h('select', { value: testDb, onChange: e => setTestDb(e.target.value), className: 'w-full bg-[var(--bg-surface-soft)] border border-[var(--border-subtle)] rounded-xl px-3 py-2 text-xs font-medium text-[var(--text-primary)] outline-none' },
               databases.map(d => h('option', { key: d.id, value: d.id }, d.name))
             )
           ),
-
-          // Question Input
           h('div', { className: 'space-y-1' },
-            h('label', { className: 'text-[10px] font-mono text-[var(--text-muted)] uppercase font-semibold' }, 'User Question'),
-            h('input', {
-              type: 'text',
-              value: testQuestion,
-              onChange: (e) => setTestQuestion(e.target.value),
-              placeholder: 'Enter query...',
-              className: 'w-full bg-[var(--bg-surface-soft)] border border-[var(--border-subtle)] rounded-xl px-3 py-2 text-xs text-[var(--text-primary)] outline-none'
-            })
+            h('label', { className: 'text-[10px] font-mono text-[var(--text-muted)] uppercase font-semibold' }, 'Question'),
+            h('input', { type: 'text', value: testQuestion, onChange: e => setTestQuestion(e.target.value), className: 'w-full bg-[var(--bg-surface-soft)] border border-[var(--border-subtle)] rounded-xl px-3 py-2 text-xs text-[var(--text-primary)] outline-none' })
           ),
-
-          // Candidate / Hallucinated Text Input
           h('div', { className: 'space-y-1' },
-            h('label', { className: 'text-[10px] font-mono text-[var(--text-muted)] uppercase font-semibold' }, 'Candidate Answer (Inject Hallucination to Test)'),
-            h('textarea', {
-              rows: 3,
-              value: testAnswer,
-              onChange: (e) => setTestAnswer(e.target.value),
-              placeholder: 'Type candidate answer with test facts...',
-              className: 'w-full bg-[var(--bg-surface-soft)] border border-[var(--border-subtle)] rounded-xl p-3 text-xs text-[var(--text-primary)] outline-none font-mono leading-relaxed'
-            })
+            h('label', { className: 'text-[10px] font-mono text-[var(--text-muted)] uppercase font-semibold' }, 'Candidate Answer (may contain hallucination)'),
+            h('textarea', { rows: 3, value: testAnswer, onChange: e => setTestAnswer(e.target.value), className: 'w-full bg-[var(--bg-surface-soft)] border border-[var(--border-subtle)] rounded-xl p-3 text-xs text-[var(--text-primary)] outline-none font-mono leading-relaxed resize-none' })
           ),
-
-          // Action Buttons
-          h('div', { className: 'grid grid-cols-2 gap-2 pt-1' },
-            h('button', {
-              onClick: () => handleEvaluate(),
-              disabled: isEvaluating || !testAnswer.trim(),
-              className: 'btn-champagne py-2.5 px-4 rounded-xl text-xs font-bold flex items-center justify-center space-x-2 disabled:opacity-40'
-            },
-              h(Icon, { name: 'shieldZap', className: 'w-4 h-4' }),
-              h('span', null, isEvaluating ? 'Evaluating...' : 'Stress-Test Shield')
-            ),
-            h('button', {
-              onClick: () => {
-                if (selectedBenchmark) {
-                  setTestAnswer(selectedBenchmark.ground_truth_answer);
-                  handleEvaluate(testQuestion, selectedBenchmark.ground_truth_answer, testDb);
-                }
-              },
-              disabled: isEvaluating,
-              className: 'btn-ghost-luxury py-2.5 px-3 rounded-xl text-xs font-semibold'
-            }, 'Test Grounded Answer')
+          h('button', { onClick: handleEvaluate, disabled: isEvaluating || !testAnswer.trim(), className: 'btn-champagne w-full py-2.5 rounded-xl text-xs font-bold disabled:opacity-40' },
+            isEvaluating ? 'Running shield...' : 'Run PS2 Hallucination Shield'
           )
         )
       ),
 
-      // RIGHT: LIVE DIAGNOSTIC RESULTS & ARCHITECTURE (lg:col-span-7)
-      h('div', { className: 'lg:col-span-7 space-y-4' },
-
-        evaluationResult ? h('div', { className: 'space-y-4 animate-entrance' },
-
-          // Result Verdict Card
-          h('div', { className: `p-6 rounded-2xl luxury-card border-l-4 ${evaluationResult.hallucination_detected ? 'border-l-[var(--danger)]' : 'border-l-[var(--verified)]'} space-y-4` },
-            h('div', { className: 'flex flex-wrap items-center justify-between gap-3' },
-              h('div', { className: 'flex items-center space-x-3' },
-                h('div', { className: `px-3 py-1.5 rounded-xl text-xs font-bold flex items-center space-x-2 ${evaluationResult.hallucination_detected ? 'badge-danger-luxury' : 'badge-verified-luxury'}` },
-                  h(Icon, { name: evaluationResult.hallucination_detected ? 'shieldAlert' : 'shieldCheck', className: 'w-4 h-4' }),
-                  h('span', null, evaluationResult.hallucination_detected ? 'HALLUCINATION INTERCEPTED' : '100% GROUNDED & VERIFIED')
-                ),
-                h('span', { className: 'text-xs text-[var(--text-secondary)] font-mono' }, `${evaluationResult.execution_time_ms}ms`)
-              ),
-              h('div', { className: 'flex items-center space-x-2' },
-                h('span', { className: 'text-[10px] font-mono text-[var(--text-muted)] uppercase font-semibold' }, 'Risk Index:'),
-                h('span', { className: `text-sm font-bold font-mono px-2.5 py-1 rounded ${evaluationResult.hallucination_risk_pct > 30 ? 'bg-[var(--danger-bg)] text-[var(--danger)]' : 'bg-[var(--verified-bg)] text-[var(--verified)]'}` },
-                  `${evaluationResult.hallucination_risk_pct}%`
-                )
-              )
-            ),
-
-            // Dissection Rationale
-            h('div', { className: 'space-y-1' },
-              h('span', { className: 'text-[10px] font-mono tracking-widest text-[var(--text-muted)] uppercase font-semibold' }, 'DETECTION DIAGNOSIS'),
-              h('p', { className: 'text-sm font-medium text-[var(--text-primary)] leading-relaxed' }, evaluationResult.reason)
-            ),
-
-            // Token-Level Claims Breakdown
-            evaluationResult.claims_breakdown && h('div', { className: 'space-y-2 pt-2 border-t border-[var(--border-subtle)]' },
-              h('span', { className: 'text-[10px] font-mono tracking-widest text-[var(--text-muted)] uppercase block font-semibold' }, 'TOKEN-BY-TOKEN CLAIM GROUNDING AUDIT'),
-              h('div', { className: 'space-y-1.5' },
-                evaluationResult.claims_breakdown.map((cl, i) => {
-                  const isGood = cl.status === "GROUNDED";
-                  return h('div', {
-                    key: i,
-                    className: `p-3 rounded-xl border flex flex-col sm:flex-row sm:items-center justify-between text-xs gap-2 ${
-                      isGood ? 'bg-[var(--verified-bg)] border-[var(--verified-border)]' : 'bg-[var(--danger-bg)] border-[var(--danger-border)]'
-                    }`
-                  },
-                    h('div', { className: 'space-y-0.5' },
-                      h('p', { className: 'font-semibold text-[var(--text-primary)]' }, `"${cl.claim}"`),
-                      cl.flag && h('p', { className: `text-[11px] font-mono ${isGood ? 'text-[var(--verified)]' : 'text-[var(--danger)]'}` }, `● ${cl.flag}`)
-                    ),
-                    h('span', { className: `text-[10px] font-mono font-bold px-2 py-0.5 rounded self-start sm:self-center ${isGood ? 'bg-[var(--verified)] text-white' : 'bg-[var(--danger)] text-white'}` },
-                      cl.status
-                    )
-                  );
-                })
-              )
-            ),
-
-            // Database Ground Truth Evidence
-            evaluationResult.evidence && h('div', { className: 'space-y-2 pt-2 border-t border-[var(--border-subtle)]' },
-              h('span', { className: 'text-[10px] font-mono tracking-widest text-[var(--text-muted)] uppercase block font-semibold' }, 'RAW DATABASE GROUND TRUTH (ZERO HALLUCINATION BASE)'),
-              h('div', { className: 'flex flex-wrap gap-2' },
-                evaluationResult.evidence.map((ev, i) => h('div', { key: i, className: 'bg-[var(--bg-surface-soft)] text-[var(--text-primary)] border border-[var(--border-subtle)] px-3 py-1.5 rounded-lg text-xs font-mono flex items-center space-x-2' },
-                  h('span', { className: 'w-1.5 h-1.5 rounded-full bg-[var(--champagne)]' }),
-                  h('span', null, ev)
-                ))
+      // Right: result
+      h('div', { className: 'lg:col-span-3' },
+        evaluationResult ? h('div', { className: 'luxury-card rounded-2xl p-5 space-y-4 animate-entrance' },
+          h('div', { className: `flex items-center space-x-3 p-3 rounded-xl border ${evaluationResult.hallucination_detected ? 'bg-[var(--danger-bg)] border-[var(--danger-border)]' : 'bg-[var(--verified-bg)] border-[var(--verified-border)]'}` },
+            h(Icon, { name: evaluationResult.hallucination_detected ? 'shieldAlert' : 'shieldCheck', className: `w-5 h-5 ${evaluationResult.hallucination_detected ? 'text-[var(--danger)]' : 'text-[var(--verified)]'}` }),
+            h('div', null,
+              h('p', { className: 'text-sm font-bold text-[var(--text-primary)]' }, evaluationResult.hallucination_detected ? 'Hallucination Intercepted' : '100% Grounded & Verified'),
+              h('p', { className: 'text-[11px] font-mono text-[var(--text-muted)]' }, `Risk: ${evaluationResult.hallucination_risk_pct}% • ${evaluationResult.execution_time_ms}ms`)
+            )
+          ),
+          h('p', { className: 'text-xs text-[var(--text-primary)] leading-relaxed' }, evaluationResult.reason),
+          evaluationResult.claims_breakdown?.length > 0 && h('div', { className: 'space-y-1.5' },
+            h('span', { className: 'text-[10px] font-mono text-[var(--text-muted)] uppercase font-semibold' }, 'Claim Analysis'),
+            evaluationResult.claims_breakdown.map((cl, i) => {
+              const ok = cl.status === 'GROUNDED';
+              return h('div', { key: i, className: `p-2.5 rounded-xl border text-xs flex items-center justify-between ${ok ? 'bg-[var(--verified-bg)] border-[var(--verified-border)]' : 'bg-[var(--danger-bg)] border-[var(--danger-border)]'}` },
+                h('span', { className: 'font-medium text-[var(--text-primary)] truncate mr-2' }, `"${cl.claim}"`),
+                h('span', { className: `text-[10px] font-mono font-bold px-2 rounded ${ok ? 'bg-[var(--verified)] text-white' : 'bg-[var(--danger)] text-white'}` }, cl.status)
+              );
+            })
+          )
+        ) : isEvaluating ? h('div', { className: 'luxury-card rounded-2xl p-12 text-center space-y-3 flex flex-col items-center' },
+          h('div', { className: 'w-10 h-10 rounded-full bg-[var(--champagne-dim)] border border-[var(--champagne-border)] flex items-center justify-center' },
+            h('span', { className: 'w-3 h-3 rounded-full bg-[var(--champagne)] animate-ping' })
+          ),
+          h('p', { className: 'text-sm font-semibold text-[var(--text-primary)]' }, 'Running 6-layer hallucination shield...')
+        ) : h('div', { className: 'luxury-card rounded-2xl p-8 space-y-4 text-center' },
+          h(Icon, { name: 'shieldZap', className: 'w-8 h-8 text-[var(--champagne)] mx-auto' }),
+          h('h3', { className: 'font-serif-luxury text-lg text-[var(--text-primary)]' }, 'HOW PS2 CATCHES HALLUCINATIONS'),
+          h('div', { className: 'grid grid-cols-2 gap-2 text-left' },
+            [
+              { num: '01', title: 'Zero-Row Guard', desc: 'Blocks invented records when DB returns 0 rows' },
+              { num: '02', title: 'Entity Grounding', desc: 'Verifies names against actual DB entries' },
+              { num: '03', title: 'Numeric Consistency', desc: 'Validates all numbers against SQL columns' },
+              { num: '04', title: 'Superlative Filter', desc: 'Flags unproven qualitative claims' },
+              { num: '05', title: 'Aggregation Check', desc: 'Validates COUNT, SUM, AVG computations' },
+              { num: '06', title: 'Semantic Auditor', desc: 'LLM-hybrid check for complex queries' },
+            ].map(l =>
+              h('div', { key: l.num, className: 'p-2.5 rounded-lg bg-[var(--bg-surface-soft)] border border-[var(--border-subtle)] space-y-0.5' },
+                h('span', { className: 'text-[10px] font-mono text-[var(--champagne)] font-bold' }, `LAYER ${l.num}`),
+                h('p', { className: 'text-[11px] font-semibold text-[var(--text-primary)]' }, l.title),
+                h('p', { className: 'text-[10px] text-[var(--text-muted)]' }, l.desc)
               )
             )
           )
-
-        ) : isEvaluating ? (
-
-          h('div', { className: 'p-12 rounded-2xl luxury-card text-center space-y-4 flex flex-col items-center justify-center min-h-[380px]' },
-            h('div', { className: 'w-12 h-12 rounded-full bg-[var(--champagne-dim)] border border-[var(--champagne-border)] flex items-center justify-center' },
-              h('span', { className: 'w-3 h-3 rounded-full bg-[var(--champagne)] animate-ping' })
-            ),
-            h('div', { className: 'space-y-1' },
-              h('h3', { className: 'text-base font-semibold text-[var(--text-primary)]' }, 'Executing 6-Layer Hallucination Shield...'),
-              h('p', { className: 'text-xs text-[var(--text-muted)] max-w-sm' }, 'Cross-referencing candidate assertions with SQL relational constraints, numeric registers, and entity graphs.')
-            )
-          )
-
-        ) : (
-
-          // Standby Guidance Card
-          h('div', { className: 'p-8 rounded-2xl luxury-card space-y-6' },
-            h('div', { className: 'space-y-2' },
-              h('div', { className: 'inline-flex items-center space-x-2 px-3 py-1 rounded-full bg-[var(--champagne-dim)] text-[var(--champagne)] text-[10px] font-mono font-semibold uppercase tracking-widest' },
-                h(Icon, { name: 'target', className: 'w-3.5 h-3.5' }),
-                h('span', null, 'READY FOR RED-TEAMING')
-              ),
-              h('h3', { className: 'font-serif-luxury text-xl text-[var(--text-primary)]' }, 'HOW TRUSTDB-AI PREVENTS HALLUCINATIONS'),
-              h('p', { className: 'text-xs text-[var(--text-secondary)] leading-relaxed' },
-                'Traditional LLMs frequently hallucinate metrics, invent non-existent database rows, or embellish answers with qualitative superlatives. TRUSTDB-AI solves this by executing a deterministic 6-layer verification barrier on every query.'
-              )
-            ),
-
-            // 6-Layer Architecture Breakdown
-            h('div', { className: 'grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2' },
-              [
-                { num: "01", title: "Zero-Row Phantom Barrier", desc: "Prevents synthesizing fictional records when WHERE filters return 0 rows." },
-                { num: "02", title: "Entity Grounding Matrix", desc: "Cross-checks proper nouns, names, and foreign keys against database indices." },
-                { num: "03", title: "Strict Numeric Consistency", desc: "Validates every integer, percentage, and currency against SQL column rows." },
-                { num: "04", title: "Qualitative Superlative Filter", desc: "Flags unproven claims like 'best student' or 'guaranteed' that lack DB schema proof." },
-                { num: "05", title: "Mathematical Aggregation Verifier", desc: "Validates COUNT, SUM, AVG computations with mathematical determinism." },
-                { num: "06", title: "Semantic LLM Auditor (Hybrid)", desc: "Adversarial second-stage auditor for complex ambiguous queries." }
-              ].map(ly => h('div', { key: ly.num, className: 'p-3.5 rounded-xl bg-[var(--bg-surface-soft)] border border-[var(--border-subtle)] space-y-1' },
-                h('div', { className: 'flex items-center justify-between' },
-                  h('span', { className: 'text-[10px] font-mono text-[var(--champagne)] font-bold' }, `LAYER ${ly.num}`),
-                  h('span', { className: 'text-[9px] font-mono text-[var(--verified)] font-bold' }, 'ACTIVE')
-                ),
-                h('h4', { className: 'text-xs font-semibold text-[var(--text-primary)]' }, ly.title),
-                h('p', { className: 'text-[11px] text-[var(--text-muted)] leading-relaxed' }, ly.desc)
-              ))
-            )
-          )
-
         )
-
       )
-
     )
-
   );
 }
 
-// Main Neura-X Application Component
+// =============================================================================
+// MAIN APP
+// =============================================================================
 function App() {
   const [theme, setTheme] = useState(() => localStorage.getItem('neura_theme') || 'dark');
   const [databases, setDatabases] = useState([]);
   const [activeDb, setActiveDb] = useState("college_records");
   const [schemaData, setSchemaData] = useState(null);
-  const [activeTab, setActiveTab] = useState("ask"); // 'ask', 'battle', 'hallucination', 'explore', 'history', 'insights'
+  const [activeTab, setActiveTab] = useState("ask");
   const [toastMessage, setToastMessage] = useState(null);
 
   const [inputQuery, setInputQuery] = useState("");
-  const [isAnalyzing, setIsAnalyzing] = useState(false);
-  const [analysisStage, setAnalysisStage] = useState(0);
-  const [currentResult, setCurrentResult] = useState(null);
   const [isListening, setIsListening] = useState(false);
   const [directSqlMode, setDirectSqlMode] = useState(false);
 
-  // Result View Switcher (Tabular vs SQL vs Chart vs Grounding)
-  const [resultViewMode, setResultViewMode] = useState("table"); // 'table', 'sql', 'chart', 'grounding'
+  // Query state model: 'idle' | 'loading' | 'success' | 'empty' | 'error'
+  const [queryState, setQueryState] = useState('idle');
+  const [analysisStage, setAnalysisStage] = useState(0);
+  const [currentResult, setCurrentResult] = useState(null);
+  const [activeQuery, setActiveQuery] = useState(null); // Question tied to currentResult
+  const [queryError, setQueryError] = useState(null);
 
-  // Table Search & Chart Settings
-  const [tableSearch, setTableSearch] = useState("");
-  const [chartTypeOverride, setChartTypeOverride] = useState(null);
+  // Race condition guard: only apply the result that belongs to the latest request
+  const activeRequestRef = useRef(0);
 
-  // History, Settings & Telemetry
   const [queryHistory, setQueryHistory] = useState([]);
   const [settingsData, setSettingsData] = useState({
     llm_provider: "offline",
@@ -987,180 +1028,70 @@ function App() {
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [uploadStatus, setUploadStatus] = useState(null);
 
-  const chartCanvasRef = useRef(null);
-  const chartInstanceRef = useRef(null);
-
-  // Theme Synchronizer
+  // Theme sync
   useEffect(() => {
     document.documentElement.className = theme;
     localStorage.setItem('neura_theme', theme);
   }, [theme]);
 
-  const toggleTheme = () => {
-    setTheme(prev => (prev === 'dark' ? 'light' : 'dark'));
-  };
+  const toggleTheme = () => setTheme(prev => prev === 'dark' ? 'light' : 'dark');
 
   const showToast = (msg) => {
     setToastMessage(msg);
     setTimeout(() => setToastMessage(null), 3000);
   };
 
-  // Init Data Fetching
-  useEffect(() => {
-    fetchDatabases();
-    fetchSettings();
-    fetchHistory();
-  }, []);
-
-  useEffect(() => {
-    if (activeDb) {
-      fetchSchema(activeDb);
-    }
-  }, [activeDb]);
-
-  // Chart Rendering in Visual Analytics Section
-  useEffect(() => {
-    if (currentResult && currentResult.chart && chartCanvasRef.current && resultViewMode === "chart") {
-      if (chartInstanceRef.current) {
-        chartInstanceRef.current.destroy();
-      }
-      try {
-        const ctx = chartCanvasRef.current.getContext('2d');
-        const targetType = chartTypeOverride || currentResult.chart.type;
-
-        const isDark = theme === 'dark';
-        const textColor = isDark ? '#CBD5E1' : '#334155';
-        const gridColor = isDark ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.06)';
-
-        const luxuryChartData = { ...currentResult.chart.data };
-        if (luxuryChartData.datasets && luxuryChartData.datasets[0]) {
-          const ds = luxuryChartData.datasets[0];
-          if (targetType === 'bar') {
-            ds.backgroundColor = isDark ? 'rgba(198, 167, 107, 0.75)' : 'rgba(180, 136, 59, 0.85)';
-            ds.borderColor = isDark ? '#C6A76B' : '#B4883B';
-            ds.borderWidth = 1;
-            ds.borderRadius = 6;
-          } else if (targetType === 'line') {
-            ds.borderColor = isDark ? '#C6A76B' : '#B4883B';
-            ds.backgroundColor = isDark ? 'rgba(198, 167, 107, 0.15)' : 'rgba(180, 136, 59, 0.15)';
-            ds.fill = true;
-            ds.tension = 0.3;
-          } else if (targetType === 'doughnut' || targetType === 'pie') {
-            ds.backgroundColor = [
-              isDark ? '#C6A76B' : '#B4883B',
-              isDark ? '#7FA58C' : '#15803D',
-              isDark ? '#CBD5E1' : '#475569',
-              isDark ? '#B99A62' : '#D97706',
-              isDark ? '#8E97A0' : '#94A3B8'
-            ];
-            ds.borderColor = isDark ? '#0B0D0F' : '#FFFFFF';
-          }
-        }
-
-        chartInstanceRef.current = new Chart(ctx, {
-          type: targetType,
-          data: luxuryChartData,
-          options: {
-            ...currentResult.chart.options,
-            responsive: true,
-            maintainAspectRatio: false,
-            animation: { duration: 600, easing: 'easeOutQuart' },
-            plugins: {
-              legend: {
-                labels: {
-                  color: textColor,
-                  font: { family: 'Plus Jakarta Sans', size: 12 }
-                }
-              }
-            },
-            scales: targetType === 'doughnut' || targetType === 'pie' ? {} : {
-              x: {
-                grid: { color: gridColor },
-                ticks: { color: textColor, font: { family: 'Plus Jakarta Sans', size: 11 } }
-              },
-              y: {
-                grid: { color: gridColor },
-                ticks: { color: textColor, font: { family: 'Plus Jakarta Sans', size: 11 } }
-              }
-            }
-          }
-        });
-      } catch (err) {
-        console.error("Chart Rendering Error:", err);
-      }
-    }
-    return () => {
-      if (chartInstanceRef.current) {
-        chartInstanceRef.current.destroy();
-      }
-    };
-  }, [currentResult, resultViewMode, chartTypeOverride, theme]);
+  // Init
+  useEffect(() => { fetchDatabases(); fetchSettings(); fetchHistory(); }, []);
+  useEffect(() => { if (activeDb) fetchSchema(activeDb); }, [activeDb]);
 
   const fetchDatabases = async () => {
-    try {
-      const res = await fetch(`${API_BASE}/api/databases`);
-      if (res.ok) {
-        const data = await res.json();
-        setDatabases(data);
-      }
-    } catch (e) { console.error(e); }
+    try { const r = await fetch(`${API_BASE}/api/databases`); if (r.ok) setDatabases(await r.json()); } catch (e) { console.error(e); }
   };
-
   const fetchSchema = async (dbId) => {
-    try {
-      const res = await fetch(`${API_BASE}/api/databases/${dbId}/schema`);
-      if (res.ok) {
-        const data = await res.json();
-        setSchemaData(data);
-      }
-    } catch (e) { console.error(e); }
+    try { const r = await fetch(`${API_BASE}/api/databases/${dbId}/schema`); if (r.ok) setSchemaData(await r.json()); } catch (e) { console.error(e); }
   };
-
   const fetchSettings = async () => {
-    try {
-      const res = await fetch(`${API_BASE}/api/settings`);
-      if (res.ok) {
-        const data = await res.json();
-        setSettingsData(prev => ({ ...prev, ...data }));
-      }
-    } catch (e) { console.error(e); }
+    try { const r = await fetch(`${API_BASE}/api/settings`); if (r.ok) { const d = await r.json(); setSettingsData(prev => ({ ...prev, ...d })); } } catch (e) { console.error(e); }
   };
-
   const fetchHistory = async () => {
-    try {
-      const res = await fetch(`${API_BASE}/api/history`);
-      if (res.ok) {
-        const data = await res.json();
-        setQueryHistory(data);
-      }
-    } catch (e) { console.error(e); }
+    try { const r = await fetch(`${API_BASE}/api/history`); if (r.ok) setQueryHistory(await r.json()); } catch (e) { console.error(e); }
   };
 
-  // Submit Query to Agent with Staged Progress Simulation
-  const handleSendQuery = async (queryText = inputQuery, simulateAnswer = null) => {
-    const textToRun = (queryText || "").trim();
-    if (!textToRun || isAnalyzing) return;
+  // ==========================================================================
+  // QUERY SUBMISSION — with race condition guard
+  // ==========================================================================
+  const handleSendQuery = useCallback(async (queryText, targetDbOverride) => {
+    const textToRun = (queryText !== undefined ? queryText : inputQuery || "").trim();
+    if (!textToRun) return;
 
+    const dbToUse = targetDbOverride || activeDb;
+
+    // Claim this request slot
+    const requestId = ++activeRequestRef.current;
+
+    // Immediately clear old state, set the question we're answering
+    setActiveQuery(textToRun);
     setInputQuery(textToRun);
-    setIsAnalyzing(true);
-    setAnalysisStage(1);
     setCurrentResult(null);
-    setChartTypeOverride(null);
-    setResultViewMode("table"); // Default to Table on new query!
+    setQueryError(null);
+    setQueryState('loading');
+    setAnalysisStage(1);
 
-    const stageTimer1 = setTimeout(() => setAnalysisStage(2), 200);
-    const stageTimer2 = setTimeout(() => setAnalysisStage(3), 450);
-    const stageTimer3 = setTimeout(() => setAnalysisStage(4), 700);
+    const t1 = setTimeout(() => setAnalysisStage(2), 200);
+    const t2 = setTimeout(() => setAnalysisStage(3), 450);
+    const t3 = setTimeout(() => setAnalysisStage(4), 700);
 
     try {
       const payload = {
         question: textToRun,
-        database_id: activeDb,
+        database_id: dbToUse,
         provider: settingsData.llm_provider,
-        api_key: settingsData.llm_provider === "gemini" ? settingsData.gemini_key_input : settingsData.openai_key_input,
+        api_key: settingsData.llm_provider === "gemini"
+          ? settingsData.gemini_key_input
+          : settingsData.openai_key_input,
         model_name: settingsData.model_name,
         custom_sql: directSqlMode ? textToRun : null,
-        simulate_answer: simulateAnswer
       };
 
       const res = await fetch(`${API_BASE}/api/query`, {
@@ -1168,946 +1099,528 @@ function App() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload)
       });
-
       const data = await res.json();
 
-      if (!res.ok) {
-        throw new Error(data.detail || "Query execution encountered an issue.");
-      }
+      // Discard stale responses — only the latest request wins
+      if (requestId !== activeRequestRef.current) return;
+
+      if (!res.ok) throw new Error(data.detail || "Query execution failed.");
 
       setCurrentResult(data);
+      setQueryState(data.row_count === 0 ? 'empty' : 'success');
       fetchHistory();
     } catch (err) {
-      showToast(`Query Error: ${err.message}`);
+      if (requestId !== activeRequestRef.current) return;
+      setQueryError(err.message);
+      setQueryState('error');
+      showToast(`Error: ${err.message}`);
     } finally {
-      clearTimeout(stageTimer1);
-      clearTimeout(stageTimer2);
-      clearTimeout(stageTimer3);
-      setIsAnalyzing(false);
-      setAnalysisStage(0);
+      clearTimeout(t1); clearTimeout(t2); clearTimeout(t3);
+      if (requestId === activeRequestRef.current) {
+        setAnalysisStage(0);
+        setQueryState(s => s === 'loading' ? 'idle' : s);
+      }
     }
-  };
+  }, [inputQuery, activeDb, settingsData, directSqlMode]);
 
-  // Voice Interaction
+  // Voice input
   const handleVoiceToggle = () => {
     if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
-      showToast("Voice speech recognition is supported in Chrome, Edge, and Safari.");
+      showToast("Voice input is supported in Chrome, Edge, and Safari.");
       return;
     }
-    if (isListening) {
-      setIsListening(false);
-      return;
-    }
-
-    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-    const recognition = new SpeechRecognition();
-    recognition.lang = 'en-US';
-    recognition.onstart = () => setIsListening(true);
-    recognition.onresult = (e) => {
-      const transcript = e.results[0][0].transcript;
-      setInputQuery(transcript);
-      setIsListening(false);
-      handleSendQuery(transcript);
-    };
-    recognition.onerror = () => setIsListening(false);
-    recognition.onend = () => setIsListening(false);
-    recognition.start();
+    if (isListening) { setIsListening(false); return; }
+    const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+    const rec = new SR();
+    rec.lang = 'en-US';
+    rec.onstart = () => setIsListening(true);
+    rec.onresult = (e) => { const t = e.results[0][0].transcript; setInputQuery(t); setIsListening(false); handleSendQuery(t); };
+    rec.onerror = () => setIsListening(false);
+    rec.onend = () => setIsListening(false);
+    rec.start();
   };
 
-  // CSV/JSON Data Exports
+  // Export
   const exportCSV = () => {
-    if (!currentResult || !currentResult.rows.length) return;
-    const cols = currentResult.columns;
-    const rows = currentResult.rows;
-    let csv = cols.join(",") + "\n";
-    rows.forEach(r => {
-      csv += cols.map(c => {
-        let v = r[c] === null || r[c] === undefined ? "" : String(r[c]);
-        return (v.includes(",") || v.includes('"')) ? `"${v.replace(/"/g, '""')}"` : v;
-      }).join(",") + "\n";
-    });
-    const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = `neura_export_${activeDb}_${Date.now()}.csv`;
-    a.click();
-    showToast("Exported CSV successfully.");
+    if (!currentResult?.rows?.length) return;
+    const { columns, rows } = currentResult;
+    let csv = columns.join(",") + "\n";
+    rows.forEach(r => { csv += columns.map(c => { let v = r[c] === null || r[c] === undefined ? "" : String(r[c]); return (v.includes(",") || v.includes('"')) ? `"${v.replace(/"/g, '""')}"` : v; }).join(",") + "\n"; });
+    const a = document.createElement("a"); a.href = URL.createObjectURL(new Blob([csv], { type: "text/csv" })); a.download = `neura_${activeDb}_${Date.now()}.csv`; a.click();
+    showToast("Exported CSV.");
   };
-
   const exportJSON = () => {
-    if (!currentResult || !currentResult.rows.length) return;
-    const blob = new Blob([JSON.stringify(currentResult.rows, null, 2)], { type: "application/json" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = `neura_export_${activeDb}_${Date.now()}.json`;
-    a.click();
-    showToast("Exported JSON successfully.");
+    if (!currentResult?.rows?.length) return;
+    const a = document.createElement("a"); a.href = URL.createObjectURL(new Blob([JSON.stringify(currentResult.rows, null, 2)], { type: "application/json" })); a.download = `neura_${activeDb}_${Date.now()}.json`; a.click();
+    showToast("Exported JSON.");
   };
 
-  // CSV Importer
   const handleCSVUpload = async (e) => {
-    const file = e.target.files[0];
-    if (!file) return;
-    const formData = new FormData();
-    formData.append("file", file);
-    setUploadStatus("Ingesting dataset and building relational schema...");
+    const file = e.target.files[0]; if (!file) return;
+    const fd = new FormData(); fd.append("file", file);
+    setUploadStatus("Importing dataset...");
     try {
-      const res = await fetch(`${API_BASE}/api/databases/upload-csv`, {
-        method: "POST",
-        body: formData
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.detail);
-      setUploadStatus(`✅ Imported table '${data.table_name}' (${data.row_count} rows). Ready to query.`);
-      showToast(`Imported ${data.table_name} successfully.`);
-      await fetchDatabases();
-      setActiveDb(data.database_id);
-    } catch (err) {
-      setUploadStatus(`❌ ${err.message}`);
-      showToast(`Error: ${err.message}`);
-    }
+      const r = await fetch(`${API_BASE}/api/databases/upload-csv`, { method: "POST", body: fd });
+      const d = await r.json(); if (!r.ok) throw new Error(d.detail);
+      setUploadStatus(`✅ Imported '${d.table_name}' (${d.row_count} rows)`);
+      showToast(`Imported ${d.table_name}.`);
+      await fetchDatabases(); setActiveDb(d.database_id);
+    } catch (err) { setUploadStatus(`❌ ${err.message}`); }
   };
 
-  // Filtered rows for Data Grid
-  const filteredRows = useMemo(() => {
-    if (!currentResult || !currentResult.rows) return [];
-    if (!tableSearch) return currentResult.rows;
-    return currentResult.rows.filter(row =>
-      Object.values(row).some(v => String(v).toLowerCase().includes(tableSearch.toLowerCase()))
-    );
-  }, [currentResult, tableSearch]);
-
-  // Aggregate Insights Metrics
+  // Aggregate insights
   const insightsMetrics = useMemo(() => {
     const total = queryHistory.length;
-    if (total === 0) {
-      return { total: 0, verifiedPct: "100%", avgReliability: "94.5", avgLatency: "1.2s" };
-    }
-    const verifiedCount = queryHistory.filter(q => q.verification_status === "VERIFIED" || q.verification_status === "MOSTLY VERIFIED").length;
-    const verifiedPct = `${Math.round((verifiedCount / total) * 100)}%`;
-    const sumRel = queryHistory.reduce((acc, q) => acc + (q.reliability_score || 90), 0);
-    const avgReliability = (sumRel / total).toFixed(1);
-    const sumLat = queryHistory.reduce((acc, q) => acc + (q.execution_time_ms || 20), 0);
-    const avgLatency = `${(sumLat / total).toFixed(0)} ms`;
-    return { total, verifiedPct, avgReliability, avgLatency };
+    if (!total) return { total: 0, verifiedPct: "—", avgReliability: "—", avgLatency: "—" };
+    const vc = queryHistory.filter(q => q.verification_status === "VERIFIED" || q.verification_status === "MOSTLY VERIFIED").length;
+    return {
+      total,
+      verifiedPct: `${Math.round(vc / total * 100)}%`,
+      avgReliability: (queryHistory.reduce((a, q) => a + (q.reliability_score || 90), 0) / total).toFixed(1),
+      avgLatency: `${Math.round(queryHistory.reduce((a, q) => a + (q.execution_time_ms || 20), 0) / total)} ms`,
+    };
   }, [queryHistory]);
 
-  const activeDatabaseObj = databases.find(d => d.id === activeDb) || { name: activeDb, table_count: 5 };
+  const activeDatabaseObj = databases.find(d => d.id === activeDb) || { name: activeDb, table_count: 0 };
   const curatedExamples = CURATED_PROMPTS[activeDb] || CURATED_PROMPTS.college_records;
 
+  // ============================================================================
+  // RENDER
+  // ============================================================================
   return h('div', { className: 'min-h-screen flex flex-col' },
 
-    // Toast Notification
-    toastMessage && h('div', { className: 'fixed bottom-8 right-8 z-50 bg-[var(--bg-surface-elevated)] border border-[var(--champagne-border)] text-[var(--text-primary)] text-xs font-semibold px-5 py-3 rounded-xl shadow-2xl flex items-center space-x-3 animate-entrance' },
+    // Toast
+    toastMessage && h('div', { className: 'fixed bottom-6 right-6 z-50 bg-[var(--bg-surface-elevated)] border border-[var(--champagne-border)] text-[var(--text-primary)] text-xs font-semibold px-4 py-3 rounded-xl shadow-2xl flex items-center space-x-3 animate-entrance' },
       h('span', { className: 'w-2 h-2 rounded-full bg-[var(--champagne)]' }),
       h('span', null, toastMessage)
     ),
 
-    // TOP LUXURY NAVIGATION (WITH DUAL-PS MERGED BRANDING)
-    h('header', { className: 'luxury-nav sticky top-0 z-40 px-6 lg:px-12 py-3.5 flex items-center justify-between' },
+    // ── NAVIGATION ──────────────────────────────────────────────────────────
+    h('header', { className: 'luxury-nav sticky top-0 z-40 px-5 lg:px-10 py-3 flex items-center justify-between' },
 
-      // Left: NEURA-X Wordmark & Merged PS Identity
-      h('div', { className: 'flex items-center space-x-3' },
+      // Logo
+      h('div', { className: 'flex items-center space-x-2.5' },
         h('div', { className: 'flex flex-col' },
-          h('div', { className: 'flex items-center space-x-2' },
-            h('span', { className: 'font-serif-luxury font-bold text-xl tracking-[0.18em] text-[var(--text-primary)]' }, 'TRUSTDB-AI'),
-            h('span', { className: 'badge-dual-merged text-[9px] px-2 py-0.5 rounded-full' }, 'PS7 + PS2 MERGED')
-          ),
-          h('span', { className: 'text-[9px] font-mono tracking-widest text-[var(--champagne)] uppercase font-semibold' }, '100% LOCAL DB QA • ZERO-HALLUCINATION SHIELD')
+          h('span', { className: 'font-serif-luxury font-bold text-lg tracking-[0.16em] text-[var(--text-primary)]' }, 'NEURA-X'),
+          h('span', { className: 'text-[8px] font-mono tracking-widest text-[var(--champagne)] uppercase font-semibold' }, 'TRUSTED AI DATABASE ASSISTANT')
         )
       ),
 
-      // Center: Editorial Nav Links (With Dual PS Arena Featured)
-      h('nav', { className: 'hidden lg:flex items-center space-x-5 text-xs font-semibold tracking-wider' },
+      // Desktop nav
+      h('nav', { className: 'hidden lg:flex items-center space-x-1' },
         [
-          { id: 'ask', label: 'ASK STUDIO', icon: 'sparkles' },
-          { id: 'battle', label: 'PS7 × PS2 ARENA', icon: 'trophy', isFeatured: true },
-          { id: 'hallucination', label: 'HALLUCINATION LAB', icon: 'shieldZap' },
-          { id: 'explore', label: 'DATA LIBRARY', icon: 'table' },
+          { id: 'ask', label: 'ASK', icon: 'sparkles' },
+          { id: 'explore', label: 'DATA LIBRARY', icon: 'database' },
           { id: 'history', label: 'AUDIT TRAIL', icon: 'history' },
-          { id: 'insights', label: 'INSIGHTS', icon: 'activity' }
-        ].map(item => h('button', {
-          key: item.id,
-          onClick: () => setActiveTab(item.id),
-          className: `transition-all py-1 px-2 border-b-2 flex items-center space-x-1.5 ${
-            activeTab === item.id
-              ? 'text-[var(--text-primary)] border-[var(--champagne)] font-bold'
-              : 'text-[var(--text-secondary)] border-transparent hover:text-[var(--text-primary)]'
-          }`
-        },
-          item.isFeatured && h('span', { className: 'px-1.5 py-0.2 rounded text-[9px] font-mono bg-[var(--champagne-dim)] text-[var(--champagne)] border border-[var(--champagne-border)] mr-1' }, 'HACKATHON WINNER'),
-          h('span', null, item.label)
-        ))
+          { id: 'insights', label: 'INSIGHTS', icon: 'activity' },
+          { id: 'hallucination', label: 'PS2 LAB', icon: 'shieldZap' },
+        ].map(item =>
+          h('button', {
+            key: item.id,
+            id: `nav-${item.id}`,
+            onClick: () => setActiveTab(item.id),
+            className: `px-3 py-1.5 rounded-lg text-xs font-semibold tracking-wider transition-all flex items-center space-x-1.5 ${
+              activeTab === item.id
+                ? 'bg-[var(--champagne-dim)] text-[var(--champagne)] border border-[var(--champagne-border)]'
+                : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-surface-soft)]'
+            }`
+          },
+            h(Icon, { name: item.icon, className: 'w-3.5 h-3.5' }),
+            h('span', null, item.label)
+          )
+        )
       ),
 
-      // Right: Theme Switcher, Database Context & Settings
-      h('div', { className: 'flex items-center space-x-3' },
-
-        // Light / Dark Theme Switcher Button
+      // Right controls
+      h('div', { className: 'flex items-center space-x-2' },
         h('button', {
+          id: 'theme-toggle',
           onClick: toggleTheme,
-          className: 'p-2 rounded-xl bg-[var(--bg-surface-soft)] hover:bg-[var(--bg-surface-hover)] border border-[var(--border-subtle)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition flex items-center justify-center',
-          title: theme === 'dark' ? 'Switch to Light Mode' : 'Switch to Dark Mode'
-        },
-          h(Icon, { name: theme === 'dark' ? 'sun' : 'moon', className: 'w-4 h-4 text-[var(--champagne)]' })
-        ),
+          className: 'p-2 rounded-lg bg-[var(--bg-surface-soft)] hover:bg-[var(--bg-surface-hover)] border border-[var(--border-subtle)] text-[var(--champagne)] transition',
+          title: theme === 'dark' ? 'Switch to Light' : 'Switch to Dark'
+        }, h(Icon, { name: theme === 'dark' ? 'sun' : 'moon', className: 'w-4 h-4' })),
 
-        // DB Selector
-        h('div', { className: 'flex items-center bg-[var(--bg-surface-soft)] border border-[var(--border-subtle)] rounded-xl px-3 py-1.5' },
-          h(Icon, { name: 'database', className: 'w-3.5 h-3.5 text-[var(--champagne)] mr-2' }),
+        h('div', { className: 'flex items-center bg-[var(--bg-surface-soft)] border border-[var(--border-subtle)] rounded-lg px-2.5 py-1.5' },
+          h(Icon, { name: 'database', className: 'w-3 h-3 text-[var(--champagne)] mr-1.5' }),
           h('select', {
+            id: 'db-selector',
             value: activeDb,
-            onChange: (e) => {
-              setActiveDb(e.target.value);
-              setCurrentResult(null);
-            },
-            className: 'bg-transparent text-xs font-semibold text-[var(--text-primary)] outline-none cursor-pointer pr-2'
-          },
-            databases.map(db => h('option', { key: db.id, value: db.id }, db.name))
-          )
+            onChange: (e) => { setActiveDb(e.target.value); setCurrentResult(null); setQueryState('idle'); setActiveQuery(null); },
+            className: 'bg-transparent text-xs font-semibold text-[var(--text-primary)] outline-none cursor-pointer'
+          }, databases.map(db => h('option', { key: db.id, value: db.id }, db.name)))
         ),
 
-        // Offline / Guard Status Badge
-        h('div', { className: 'hidden sm:flex items-center space-x-1.5 bg-[var(--verified-bg)] border border-[var(--verified-border)] px-3 py-1.5 rounded-xl text-xs text-[var(--verified)]' },
-          h('span', { className: 'w-2 h-2 rounded-full bg-[var(--verified)] animate-pulse-subtle' }),
-          h('span', { className: 'font-mono text-[10px] font-bold' }, '100% OFFLINE LOCAL')
+        h('div', { className: 'hidden sm:flex items-center space-x-1.5 bg-[var(--verified-bg)] border border-[var(--verified-border)] px-2.5 py-1.5 rounded-lg' },
+          h('span', { className: 'w-1.5 h-1.5 rounded-full bg-[var(--verified)] animate-pulse-subtle' }),
+          h('span', { className: 'text-[9px] font-mono font-bold text-[var(--verified)] uppercase' }, 'Active')
         ),
 
-        // Settings Button
         h('button', {
+          id: 'settings-btn',
           onClick: () => setIsSettingsOpen(!isSettingsOpen),
-          className: 'p-2 rounded-xl bg-[var(--bg-surface-soft)] hover:bg-[var(--bg-surface-hover)] border border-[var(--border-subtle)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition',
-          title: 'Settings & Dataset Import'
-        },
-          h(Icon, { name: 'settings', className: 'w-4 h-4' })
-        )
+          className: 'p-2 rounded-lg bg-[var(--bg-surface-soft)] hover:bg-[var(--bg-surface-hover)] border border-[var(--border-subtle)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition'
+        }, h(Icon, { name: 'settings', className: 'w-4 h-4' }))
       )
     ),
 
-    // Mobile Navigation Bar
-    h('div', { className: 'lg:hidden flex items-center justify-around bg-[var(--bg-surface)] border-b border-[var(--border-subtle)] py-2 text-[11px] font-semibold overflow-x-auto' },
+    // Mobile nav
+    h('div', { className: 'lg:hidden flex items-center justify-around bg-[var(--bg-surface)] border-b border-[var(--border-subtle)] py-1.5 text-[10px] font-semibold overflow-x-auto' },
       [
         { id: 'ask', label: 'Ask' },
-        { id: 'battle', label: 'PS7 × PS2' },
-        { id: 'hallucination', label: 'Shield Lab' },
         { id: 'explore', label: 'Library' },
         { id: 'history', label: 'Audit' },
-        { id: 'insights', label: 'Insights' }
-      ].map(item => h('button', {
-        key: item.id,
-        onClick: () => setActiveTab(item.id),
-        className: `px-2 py-1 ${activeTab === item.id ? 'text-[var(--champagne)] font-bold border-b-2 border-[var(--champagne)]' : 'text-[var(--text-secondary)]'}`
-      }, item.label))
+        { id: 'insights', label: 'Insights' },
+        { id: 'hallucination', label: 'PS2 Lab' },
+      ].map(item =>
+        h('button', {
+          key: item.id,
+          onClick: () => setActiveTab(item.id),
+          className: `px-3 py-1.5 transition whitespace-nowrap ${activeTab === item.id ? 'text-[var(--champagne)] font-bold border-b-2 border-[var(--champagne)]' : 'text-[var(--text-secondary)]'}`
+        }, item.label)
+      )
     ),
 
-    // MAIN CONTENT CONTAINER
-    h('main', { className: 'flex-1 max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8 py-6 space-y-6' },
+    // ── MAIN CONTENT ────────────────────────────────────────────────────────
+    h('main', { className: 'flex-1 max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8 py-5' },
 
-      // ==========================================
-      // VIEW 1: ASK (TABULAR-FIRST VERIFIED STUDIO)
-      // ==========================================
-      activeTab === 'ask' && h('div', { className: 'animate-entrance' },
-        h('div', { className: 'grid grid-cols-1 lg:grid-cols-12 gap-6 items-start' },
+      // =======================================================================
+      // ASK WORKSPACE
+      // =======================================================================
+      activeTab === 'ask' && h('div', { className: 'animate-entrance h-full' },
+        h('div', { className: 'grid grid-cols-1 lg:grid-cols-12 gap-5 items-start' },
 
-          // LEFT COLUMN: QUESTION & CONTROLS STUDIO (lg:col-span-5)
-          h('div', { className: 'lg:col-span-5 space-y-4' },
+          // LEFT: Question + Controls
+          h('div', { className: 'lg:col-span-4 space-y-3' },
 
-            // Compact Dual-PS Header & Input Card
+            // Brand + Input card
             h('div', { className: 'p-5 rounded-2xl luxury-card space-y-4' },
-              h('div', { className: 'flex items-center justify-between' },
-                h('div', { className: 'flex items-center space-x-1.5' },
-                  h('span', { className: 'badge-ps7 text-[9px] px-2 py-0.5 rounded' }, 'PS7 LOCAL'),
-                  h('span', { className: 'badge-ps2 text-[9px] px-2 py-0.5 rounded' }, 'PS2 GUARD')
-                ),
-                h('span', { className: 'text-[10px] font-mono text-[var(--verified)] bg-[var(--verified-bg)] border border-[var(--verified-border)] px-2 py-0.5 rounded font-bold' }, 'READ-ONLY SAFE')
+              h('div', { className: 'space-y-0.5' },
+                h('h1', { className: 'font-serif-luxury text-xl font-normal tracking-[0.06em] text-[var(--text-primary)]' }, 'ASK YOUR DATA.'),
+                h('p', { className: 'text-[11px] text-[var(--text-secondary)] leading-relaxed' }, 'Ask in plain English. Get a verified answer from your database.')
               ),
 
-              h('div', { className: 'space-y-1' },
-                h('h1', { className: 'font-serif-luxury text-2xl sm:text-3xl font-normal tracking-[0.06em] text-[var(--text-primary)] leading-tight' }, 'LOCAL DATABASE QA.'),
-                h('p', { className: 'text-xs text-[var(--text-secondary)] leading-relaxed' }, 'Ask natural language queries. Results are presented in structured tabular form and mathematically verified against SQL rows.')
-              ),
-
-              // Hero Input Box (Glassmorphic)
-              h('div', { className: 'hero-input-container rounded-2xl p-2 sm:p-2.5 flex items-center space-x-2' },
-
-                // SQL Mode Switcher Pill
+              // Input box
+              h('div', { className: 'hero-input-container rounded-xl p-2 flex items-center space-x-2' },
                 h('button', {
                   onClick: () => setDirectSqlMode(!directSqlMode),
-                  className: `px-2 py-1 rounded-lg text-[10px] font-mono tracking-wider transition ${
-                    directSqlMode ? 'bg-[var(--champagne)] text-[#0F172A] font-bold' : 'bg-[var(--bg-surface-soft)] text-[var(--text-secondary)] hover:text-[var(--text-primary)]'
-                  }`
+                  title: directSqlMode ? 'Switch to AI mode' : 'Switch to SQL mode',
+                  className: `px-2 py-1 rounded-lg text-[10px] font-mono tracking-wider transition shrink-0 ${directSqlMode ? 'bg-[var(--champagne)] text-[#0F172A] font-bold' : 'bg-[var(--bg-surface-soft)] text-[var(--text-secondary)] hover:text-[var(--text-primary)]'}`
                 }, directSqlMode ? 'SQL' : 'AI'),
 
-                // Input field
                 h('input', {
+                  id: 'query-input',
                   type: 'text',
                   value: inputQuery,
                   onChange: (e) => setInputQuery(e.target.value),
                   onKeyDown: (e) => e.key === 'Enter' && handleSendQuery(),
-                  placeholder: directSqlMode ? 'Enter SELECT query...' : 'Ask a question about your database records...',
-                  disabled: isAnalyzing,
-                  className: 'w-full bg-transparent text-xs sm:text-sm text-[var(--text-primary)] placeholder-[var(--text-muted)] outline-none font-medium'
+                  placeholder: directSqlMode ? 'Enter SELECT query...' : 'Ask your database anything...',
+                  disabled: queryState === 'loading',
+                  className: 'flex-1 min-w-0 bg-transparent text-sm text-[var(--text-primary)] placeholder-[var(--text-muted)] outline-none font-medium'
                 }),
 
-                // Voice Button
                 h('button', {
                   onClick: handleVoiceToggle,
-                  title: 'Voice Input',
-                  className: `p-2 rounded-xl transition flex items-center justify-center ${
-                    isListening ? 'bg-[var(--danger-bg)] text-[var(--danger)]' : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-surface-soft)]'
-                  }`
+                  title: 'Voice input',
+                  className: `p-1.5 rounded-lg transition shrink-0 ${isListening ? 'bg-[var(--danger-bg)] text-[var(--danger)]' : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-surface-soft)]'}`
                 },
                   isListening
                     ? h('div', { className: 'flex items-center space-x-0.5' },
-                        h('span', { className: 'w-1 bg-[var(--danger)] voice-bar-1 rounded' }),
-                        h('span', { className: 'w-1 bg-[var(--danger)] voice-bar-2 rounded' }),
-                        h('span', { className: 'w-1 bg-[var(--danger)] voice-bar-3 rounded' })
+                        h('span', { className: 'w-0.5 h-3 bg-[var(--danger)] voice-bar-1 rounded' }),
+                        h('span', { className: 'w-0.5 h-3 bg-[var(--danger)] voice-bar-2 rounded' }),
+                        h('span', { className: 'w-0.5 h-3 bg-[var(--danger)] voice-bar-3 rounded' })
                       )
                     : h(Icon, { name: 'mic', className: 'w-4 h-4' })
                 ),
 
-                // Submit Button
                 h('button', {
+                  id: 'submit-query',
                   onClick: () => handleSendQuery(),
-                  disabled: isAnalyzing || !inputQuery.trim(),
-                  className: 'btn-champagne px-3.5 py-2 rounded-xl flex items-center justify-center shrink-0 disabled:opacity-40 disabled:cursor-not-allowed shadow-lg'
-                },
-                  h(Icon, { name: 'send', className: 'w-4 h-4 text-[#0F172A]' })
-                )
+                  disabled: queryState === 'loading' || !inputQuery.trim(),
+                  className: 'btn-champagne px-3 py-2 rounded-lg flex items-center shrink-0 disabled:opacity-40 disabled:cursor-not-allowed'
+                }, h(Icon, { name: 'send', className: 'w-4 h-4 text-[#0F172A]' }))
               ),
 
-              // Connected DB Context Pill
-              h('div', { className: 'flex items-center justify-between text-xs text-[var(--text-secondary)] pt-0.5 font-mono text-[11px]' },
-                h('div', { className: 'flex items-center space-x-1.5' },
-                  h('span', { className: 'text-[var(--text-muted)] uppercase font-semibold' }, 'DB:'),
+              // DB status
+              h('div', { className: 'flex items-center justify-between text-[11px] font-mono' },
+                h('div', { className: 'flex items-center space-x-1.5 text-[var(--text-muted)]' },
+                  h('span', { className: 'uppercase font-semibold' }, 'DB:'),
                   h('span', { className: 'text-[var(--text-primary)] font-semibold' }, activeDatabaseObj.name),
                   h('span', { className: 'text-[var(--verified)] font-bold' }, '● Active')
                 ),
-                h('span', { className: 'text-[var(--text-muted)]' }, `${schemaData?.tables?.length || 0} Tables Loaded`)
+                h('span', { className: 'text-[var(--text-muted)]' }, `${schemaData?.tables?.length || 0} tables`)
               )
             ),
 
-            // Staged Query Lifecycle Progress (While querying)
-            isAnalyzing && h('div', { className: 'p-4 rounded-2xl luxury-card text-center space-y-3 animate-entrance' },
-              h('div', { className: 'flex items-center justify-center space-x-2' },
-                h('span', { className: 'w-2 h-2 rounded-full bg-[var(--champagne)] animate-ping' }),
-                h('span', { className: 'font-mono text-xs text-[var(--champagne)] uppercase tracking-wider font-bold' },
-                  analysisStage === 1 ? 'PS7: Generating SQL query...' :
-                  analysisStage === 2 ? 'PS7: Read-only sandbox check...' :
-                  analysisStage === 3 ? 'PS7: Executing database query...' :
-                  'PS2: Verifying answer grounding...'
-                )
-              ),
-              h('div', { className: 'grid grid-cols-4 gap-1.5' },
-                [
-                  { step: 1, label: "Intent" },
-                  { step: 2, label: "Safety" },
-                  { step: 3, label: "DB Read" },
-                  { step: 4, label: "PS2 Verify" }
-                ].map(st => h('div', {
-                  key: st.step,
-                  className: `p-1.5 rounded-lg text-[10px] font-mono transition-all text-center ${
-                    analysisStage >= st.step
-                      ? 'bg-[var(--champagne-dim)] text-[var(--champagne)] border border-[var(--champagne-border)] font-bold'
-                      : 'bg-[var(--bg-surface-soft)] text-[var(--text-muted)] border border-[var(--border-subtle)]'
-                  }`
-                },
-                  h('span', null, `${st.label} ${analysisStage >= st.step ? '✓' : ''}`)
-                ))
-              )
-            ),
-
-            // Demo Scenarios Interactive Section
-            h('div', { className: 'p-4 sm:p-5 rounded-2xl luxury-card space-y-3' },
-              h('div', { className: 'flex items-center justify-between' },
-                h('span', { className: 'text-[10px] font-mono tracking-widest text-[var(--champagne)] uppercase font-semibold' }, 'PS7 + PS2 TEST CASES'),
-                h('span', { className: 'text-[10px] font-mono text-[var(--text-muted)]' }, 'Instant Proof')
-              ),
-              h('div', { className: 'grid grid-cols-1 sm:grid-cols-2 gap-2' },
-                DEMO_SCENARIOS.map(sc => h('button', {
-                  key: sc.id,
-                  onClick: () => {
-                    setActiveDb("college_records");
-                    handleSendQuery(sc.query, sc.simulate || null);
-                  },
-                  className: 'p-2.5 rounded-xl luxury-card-interactive text-left space-y-1 flex flex-col justify-between'
-                },
-                  h('div', { className: 'flex items-center justify-between' },
-                    h('span', { className: 'text-[9px] font-mono text-[var(--champagne)] font-bold' }, sc.badge),
-                    h('span', { className: `text-[9px] font-mono font-bold ${sc.color === 'verified' ? 'text-[var(--verified)]' : sc.color === 'warning' ? 'text-[var(--warning)]' : 'text-[var(--champagne)]'}` }, sc.tag)
-                  ),
-                  h('p', { className: 'text-xs font-semibold text-[var(--text-primary)]' }, sc.title),
-                  h('p', { className: 'text-[10px] text-[var(--text-secondary)] line-clamp-1' }, sc.desc)
-                ))
-              )
-            ),
-
-            // Curated Example Queries
-            h('div', { className: 'p-4 sm:p-5 rounded-2xl luxury-card space-y-2.5' },
-              h('div', { className: 'flex items-center justify-between' },
-                h('span', { className: 'text-[10px] font-mono tracking-widest text-[var(--text-muted)] uppercase font-semibold' }, 'SUGGESTED DATABASE QUERIES'),
+            // Suggested queries
+            h('div', { className: 'rounded-xl border border-[var(--border-subtle)] overflow-hidden' },
+              h('div', { className: 'px-4 py-2.5 flex items-center justify-between bg-[var(--bg-surface)] border-b border-[var(--border-subtle)]' },
+                h('span', { className: 'text-[10px] font-mono text-[var(--text-muted)] uppercase font-semibold' }, 'Suggested Queries'),
                 h('span', { className: 'text-[10px] font-mono text-[var(--text-muted)]' }, 'Click to run')
               ),
-              h('div', { className: 'space-y-1.5 max-h-48 overflow-y-auto pr-1' },
-                curatedExamples.map((ex, idx) => h('button', {
-                  key: idx,
-                  onClick: () => handleSendQuery(ex),
-                  className: 'w-full text-left text-xs text-[var(--text-secondary)] hover:text-[var(--text-primary)] bg-[var(--bg-surface-soft)] hover:bg-[var(--bg-surface-hover)] border border-[var(--border-subtle)] hover:border-[var(--champagne-border)] p-2 rounded-xl transition flex items-center justify-between group'
-                },
-                  h('span', { className: 'truncate mr-2 font-medium' }, ex),
-                  h(Icon, { name: 'arrowUpRight', className: 'w-3.5 h-3.5 text-[var(--text-muted)] group-hover:text-[var(--champagne)] shrink-0' })
-                ))
+              h('div', { className: 'p-2 space-y-1 bg-[var(--bg-surface-soft)]' },
+                curatedExamples.map((ex, idx) =>
+                  h('button', {
+                    key: idx,
+                    onClick: () => handleSendQuery(ex),
+                    className: 'w-full text-left text-xs text-[var(--text-secondary)] hover:text-[var(--text-primary)] bg-[var(--bg-surface)] hover:bg-[var(--bg-surface-hover)] border border-transparent hover:border-[var(--champagne-border)] px-2.5 py-2 rounded-lg transition flex items-center justify-between group'
+                  },
+                    h('span', { className: 'truncate mr-2 font-medium' }, ex),
+                    h(Icon, { name: 'arrowUpRight', className: 'w-3 h-3 text-[var(--text-muted)] group-hover:text-[var(--champagne)] shrink-0' })
+                  )
+                )
               )
-            )
+            ),
+
+            // Demo Lab (collapsed by default)
+            h(DemoLab, { onRunQuery: (q) => { setActiveDb("college_records"); handleSendQuery(q, "college_records"); } })
           ),
 
-          // RIGHT COLUMN: LIVE RESULTS & TABULAR-FIRST EVIDENCE STUDIO (lg:col-span-7)
-          h('div', { className: 'lg:col-span-7 space-y-4' },
+          // RIGHT: Result area
+          h('div', { className: 'lg:col-span-8' },
 
-            currentResult && !isAnalyzing ? h('div', { className: 'space-y-4 animate-entrance' },
+            // Loading
+            queryState === 'loading' && h(LoadingPanel, { stage: analysisStage }),
 
-              // 1. PRIMARY RESULT CARD WITH EMBEDDED TABULAR GRID
-              h('section', { className: 'p-6 rounded-2xl luxury-card space-y-5 relative overflow-hidden border-t-2 border-t-[var(--champagne)]' },
-                
-                // Result Card Header with View Switcher
-                h('div', { className: 'flex flex-wrap items-center justify-between gap-3' },
-                  h('div', { className: 'flex items-center space-x-2' },
-                    h('span', { className: 'w-2.5 h-2.5 rounded-full bg-[var(--verified)]' }),
-                    h('span', { className: 'text-[11px] font-mono tracking-widest text-[var(--champagne)] uppercase font-bold' }, 'DATABASE QUERY RESULT'),
-                    h('span', { className: 'text-[10px] font-mono text-[var(--verified)] bg-[var(--verified-bg)] border border-[var(--verified-border)] px-2 py-0.5 rounded font-bold' },
-                      `${currentResult.row_count} Rows Proven`
-                    )
-                  ),
+            // Success or empty
+            (queryState === 'success' || queryState === 'empty') && currentResult &&
+              h(ResultPanel, {
+                result: currentResult,
+                activeQuery,
+                exportCSV,
+                exportJSON,
+                showToast,
+                theme
+              }),
 
-                  // View Switcher Pills (Table, SQL, Chart, Grounding)
-                  h('div', { className: 'flex items-center space-x-1 bg-[var(--bg-surface-soft)] p-1 rounded-xl border border-[var(--border-subtle)] text-xs font-mono' },
-                    [
-                      { id: 'table', label: 'Data Table' },
-                      { id: 'sql', label: 'SQL Sandbox' },
-                      { id: 'chart', label: 'Chart' },
-                      { id: 'grounding', label: 'PS2 Audit' }
-                    ].map(tab => h('button', {
-                      key: tab.id,
-                      onClick: () => setResultViewMode(tab.id),
-                      className: `px-2.5 py-1 rounded-lg transition font-semibold ${
-                        resultViewMode === tab.id
-                          ? 'bg-[var(--champagne)] text-[#0F172A] font-bold shadow'
-                          : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)]'
-                      }`
-                    }, tab.label))
-                  )
-                ),
+            // Error
+            queryState === 'error' &&
+              h(ErrorPanel, { message: queryError, onRetry: () => handleSendQuery(activeQuery) }),
 
-                // Natural Language Grounded Summary
-                h('div', { className: 'text-sm sm:text-base font-light text-[var(--text-primary)] leading-relaxed font-sans bg-[var(--bg-surface-soft)] p-4 rounded-xl border border-[var(--border-subtle)]' },
-                  h(MarkdownEditorial, { text: currentResult.natural_answer })
-                ),
-
-                // TAB 1: PRIMARY INTERACTIVE TABULAR DATA GRID (THE DATABASE CORE!)
-                resultViewMode === 'table' && h('div', { className: 'space-y-3' },
-                  h('div', { className: 'flex flex-wrap items-center justify-between gap-2.5' },
-                    h('div', { className: 'flex items-center space-x-2' },
-                      h('input', {
-                        type: 'text',
-                        placeholder: 'Search database records...',
-                        value: tableSearch,
-                        onChange: (e) => setTableSearch(e.target.value),
-                        className: 'bg-[var(--bg-surface)] border border-[var(--border-subtle)] rounded-xl px-3 py-1.5 text-xs text-[var(--text-primary)] placeholder-[var(--text-muted)] outline-none focus:border-[var(--champagne)] w-52 sm:w-64 font-medium'
-                      }),
-                      h('span', { className: 'text-[11px] font-mono text-[var(--text-muted)]' },
-                        `${filteredRows.length} of ${currentResult.row_count} rows`
-                      )
-                    ),
-                    h('div', { className: 'flex items-center space-x-2' },
-                      h('button', {
-                        onClick: exportCSV,
-                        className: 'btn-ghost-luxury px-3 py-1.5 rounded-lg text-xs flex items-center space-x-1.5'
-                      },
-                        h(Icon, { name: 'download', className: 'w-3.5 h-3.5' }),
-                        h('span', null, 'Export CSV')
-                      ),
-                      h('button', {
-                        onClick: exportJSON,
-                        className: 'btn-ghost-luxury px-3 py-1.5 rounded-lg text-xs'
-                      }, 'JSON')
-                    )
-                  ),
-
-                  // Structured Table Grid
-                  h('div', { className: 'overflow-x-auto rounded-xl border border-[var(--border-subtle)] max-h-80 shadow-inner' },
-                    h('table', { className: 'w-full text-left text-xs font-mono' },
-                      h('thead', { className: 'bg-[var(--bg-surface-soft)] text-[var(--text-secondary)] uppercase tracking-wider sticky top-0 border-b border-[var(--border-subtle)] shadow-sm' },
-                        h('tr', null,
-                          currentResult.columns.map((col, idx) => h('th', { key: idx, className: 'p-3 font-semibold whitespace-nowrap' }, col.replace(/_/g, ' ')))
-                        )
-                      ),
-                      h('tbody', { className: 'divide-y divide-[var(--border-subtle)] bg-[var(--bg-surface)]' },
-                        filteredRows.length === 0
-                          ? h('tr', null, h('td', { colSpan: currentResult.columns.length, className: 'p-6 text-center text-[var(--text-muted)]' }, 'No database records match filter.'))
-                          : filteredRows.map((row, rIdx) => {
-                              const isTopEvidence = rIdx === 0 && currentResult.verification?.grounded;
-                              return h('tr', {
-                                key: rIdx,
-                                className: `hover:bg-[var(--bg-surface-soft)] transition ${isTopEvidence ? 'row-evidence-highlight' : ''}`
-                              },
-                                currentResult.columns.map((col, cIdx) => h('td', {
-                                  key: cIdx,
-                                  className: 'p-3 text-[var(--text-primary)] whitespace-nowrap font-medium'
-                                },
-                                  row[col] !== null && row[col] !== undefined ? String(row[col]) : h('span', { className: 'text-[var(--text-muted)]' }, 'NULL')
-                                ))
-                              );
-                            })
-                      )
-                    )
-                  )
-                ),
-
-                // TAB 2: SQL SANITIZED QUERY & EXECUTION LOGIC (PS7)
-                resultViewMode === 'sql' && h('div', { className: 'space-y-3 animate-entrance' },
-                  h('div', { className: 'flex items-center justify-between' },
-                    h('span', { className: 'text-[11px] font-mono text-[var(--text-muted)] font-semibold' }, 'PS7 GENERATED & VALIDATED SQL QUERY:'),
-                    h('button', {
-                      onClick: () => {
-                        navigator.clipboard.writeText(currentResult.sanitized_sql);
-                        showToast("SQL query copied.");
-                      },
-                      className: 'btn-ghost-luxury px-3 py-1.5 rounded-lg text-xs flex items-center space-x-1.5'
-                    },
-                      h(Icon, { name: 'copy', className: 'w-3.5 h-3.5' }),
-                      h('span', null, 'Copy SQL')
-                    )
-                  ),
-                  h('pre', { className: 'sql-luxury-box p-4 text-xs font-mono overflow-x-auto leading-relaxed text-[var(--champagne)]' },
-                    currentResult.sanitized_sql
-                  ),
-                  h('div', { className: 'grid grid-cols-2 gap-2 text-xs' },
-                    h('div', { className: 'p-3 rounded-xl bg-[var(--bg-surface-soft)] border border-[var(--border-subtle)] space-y-0.5' },
-                      h('span', { className: 'text-[10px] font-mono text-[var(--text-muted)] uppercase' }, 'QUERY INTENT'),
-                      h('p', { className: 'text-[var(--text-primary)] font-semibold' }, currentResult.intent || 'Data Extraction')
-                    ),
-                    h('div', { className: 'p-3 rounded-xl bg-[var(--bg-surface-soft)] border border-[var(--border-subtle)] space-y-0.5' },
-                      h('span', { className: 'text-[10px] font-mono text-[var(--text-muted)] uppercase' }, 'PS7 GUARDRAIL STATUS'),
-                      h('p', { className: 'text-[var(--verified)] font-mono font-bold' }, '100% Read-Only Enforced')
-                    )
-                  )
-                ),
-
-                // TAB 3: VISUAL CHART ANALYTICS
-                resultViewMode === 'chart' && h('div', { className: 'space-y-3 animate-entrance' },
-                  currentResult.chart ? h('div', { className: 'space-y-3' },
-                    h('div', { className: 'flex items-center justify-between' },
-                      h('span', { className: 'text-xs text-[var(--text-secondary)] font-semibold' }, currentResult.chart.title || 'Data Projections'),
-                      h('div', { className: 'flex items-center space-x-1 bg-[var(--bg-surface-soft)] p-1 rounded-lg border border-[var(--border-subtle)] text-xs font-mono' },
-                        ['bar', 'line', 'doughnut'].map(t => h('button', {
-                          key: t,
-                          onClick: () => setChartTypeOverride(t),
-                          className: `px-2.5 py-1 rounded capitalize transition ${
-                            (chartTypeOverride || currentResult.chart.type) === t ? 'bg-[var(--champagne)] text-[#0F172A] font-bold' : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)]'
-                          }`
-                        }, t))
-                      )
-                    ),
-                    h('div', { className: 'w-full h-72 relative p-4 bg-[var(--bg-surface-soft)] rounded-2xl border border-[var(--border-subtle)]' },
-                      h('canvas', { ref: chartCanvasRef })
-                    )
-                  ) : h('div', { className: 'p-8 text-center text-xs text-[var(--text-muted)] bg-[var(--bg-surface-soft)] rounded-xl' },
-                    'No numerical dimensions suitable for charting in this query.'
-                  )
-                ),
-
-                // TAB 4: PS2 GROUNDING AUDIT DETAILS
-                resultViewMode === 'grounding' && h('div', { className: 'space-y-3 animate-entrance' },
-                  h(VerificationHeroPanel, { verification: currentResult.verification })
-                ),
-
-                // Footer Metadata & Quick Actions
-                h('div', { className: 'pt-3 border-t border-[var(--border-subtle)] flex flex-wrap items-center justify-between text-xs text-[var(--text-secondary)] gap-2 font-mono text-[11px]' },
-                  h('div', { className: 'flex items-center space-x-2' },
-                    h('span', { className: 'text-[var(--text-muted)]' }, 'Target DB:'),
-                    h('span', { className: 'text-[var(--text-primary)] font-semibold' }, currentResult.database_id),
-                    h('span', { className: 'text-[var(--text-muted)]' }, '•'),
-                    h('span', { className: 'text-[var(--champagne)]' }, `${currentResult.execution_time_ms}ms`)
-                  ),
-                  h('button', {
-                    onClick: () => setActiveTab('battle'),
-                    className: 'text-[10px] font-mono text-[var(--champagne)] hover:underline flex items-center space-x-1 font-bold'
-                  },
-                    h('span', null, 'Compare with Naive LLM in Arena →')
-                  )
-                )
-
-              ),
-
-              // 2. PS2 Trust & Verification Panel
-              h(VerificationHeroPanel, { verification: currentResult.verification }),
-
-              // 3. Trust Chain Pipeline
-              h(TrustChain, { verification: currentResult.verification, result: currentResult })
-
-            ) : isAnalyzing ? (
-              // Loading placeholder
-              h('div', { className: 'p-10 rounded-2xl luxury-card text-center space-y-4 flex flex-col items-center justify-center min-h-[420px]' },
-                h('div', { className: 'w-12 h-12 rounded-full bg-[var(--champagne-dim)] border border-[var(--champagne-border)] flex items-center justify-center' },
-                  h('span', { className: 'w-3 h-3 rounded-full bg-[var(--champagne)] animate-ping' })
-                ),
-                h('div', { className: 'space-y-1' },
-                  h('h3', { className: 'text-base font-semibold text-[var(--text-primary)]' }, 'Executing Grounded Analysis...'),
-                  h('p', { className: 'text-xs text-[var(--text-secondary)] max-w-sm' }, 'PS7 translates to safe SQL and executes on local SQLite. PS2 verifies grounding across 6 deterministic defense layers.')
-                )
-              )
-            ) : (
-              // Standby Ready State
-              h('div', { className: 'p-8 sm:p-10 rounded-2xl luxury-card space-y-6 min-h-[460px] flex flex-col justify-center' },
-                h('div', { className: 'space-y-2' },
-                  h('div', { className: 'inline-flex items-center space-x-2 px-3 py-1 rounded-full bg-[var(--verified-bg)] border border-[var(--verified-border)] text-[10px] font-mono text-[var(--verified)] font-bold' },
-                    h('span', { className: 'w-1.5 h-1.5 rounded-full bg-[var(--verified)]' }),
-                    h('span', null, 'PS7 + PS2 STANDBY • READY TO QUERY')
-                  ),
-                  h('h3', { className: 'font-serif-luxury text-2xl font-normal text-[var(--text-primary)]' }, 'TABULAR-FIRST DATABASE STUDIO'),
-                  h('p', { className: 'text-xs text-[var(--text-secondary)] leading-relaxed max-w-md' },
-                    'Ask a question on the left or click any test scenario. Structured records are displayed immediately as an interactive database table accompanied by zero-hallucination mathematical verification.'
-                  )
-                ),
-
-                h('div', { className: 'grid grid-cols-1 sm:grid-cols-3 gap-3 pt-2' },
-                  [
-                    { icon: 'table', title: 'Interactive Grid', desc: 'Direct tabular records with search, sort & CSV/JSON export' },
-                    { icon: 'shieldCheck', title: 'PS2 Zero Hallucination', desc: 'Every number, entity & aggregate verified against SQL rows' },
-                    { icon: 'database', title: 'PS7 100% Local DB', desc: 'Read-only offline execution with zero third-party API keys' }
-                  ].map((f, i) => h('div', { key: i, className: 'p-3.5 rounded-xl bg-[var(--bg-surface-soft)] border border-[var(--border-subtle)] space-y-1.5' },
-                    h(Icon, { name: f.icon, className: 'w-4 h-4 text-[var(--champagne)]' }),
-                    h('h4', { className: 'text-xs font-semibold text-[var(--text-primary)]' }, f.title),
-                    h('p', { className: 'text-[11px] text-[var(--text-muted)]' }, f.desc)
-                  ))
-                ),
-
-                h('div', { className: 'p-3 rounded-xl bg-[var(--bg-surface-soft)] border border-[var(--border-subtle)] flex items-center justify-between text-xs font-mono text-[11px]' },
-                  h('span', { className: 'text-[var(--text-secondary)]' }, `Active Database: ${activeDatabaseObj.name}`),
-                  h('span', { className: 'text-[var(--champagne)] font-bold' }, `${activeDatabaseObj.table_count || schemaData?.tables?.length || 5} Tables Registered`)
-                )
-              )
-            )
+            // Idle (welcome)
+            queryState === 'idle' && h(WelcomePanel, { dbName: activeDatabaseObj.name })
           )
         )
       ),
 
-      // ==========================================
-      // VIEW 2: PS7 × PS2 BATTLE ARENA & HACKATHON SHOWCASE
-      // ==========================================
-      activeTab === 'battle' && h(DualProblemStatementShowcase, {
-        onRunDemoScenario: (q) => {
-          setActiveTab('ask');
-          handleSendQuery(q);
-        }
-      }),
-
-      // ==========================================
-      // VIEW 3: 50% PILLAR - HALLUCINATION LAB & SHIELD
-      // ==========================================
-      activeTab === 'hallucination' && h(HallucinationLabWorkspace, {
-        activeDb,
-        databases,
-        showToast,
-        onSendQueryToStudio: (q, sim) => {
-          setActiveTab('ask');
-          handleSendQuery(q, sim);
-        }
-      }),
-
-      // ==========================================
-      // VIEW 4: DATA LIBRARY (SCHEMA EXPLORER)
-      // ==========================================
-      activeTab === 'explore' && h('div', { className: 'space-y-8 animate-entrance' },
-        h('div', { className: 'space-y-2' },
-          h('span', { className: 'text-[10px] font-mono tracking-widest text-[var(--champagne)] uppercase font-bold' }, 'PS7 RELATIONAL ARCHITECTURE'),
-          h('h2', { className: 'font-serif-luxury text-3xl font-normal text-[var(--text-primary)]' }, 'DATA LIBRARY'),
+      // =======================================================================
+      // DATA LIBRARY
+      // =======================================================================
+      activeTab === 'explore' && h('div', { className: 'space-y-6 animate-entrance' },
+        h('div', { className: 'space-y-1' },
+          h('h2', { className: 'font-serif-luxury text-2xl font-normal text-[var(--text-primary)]' }, 'DATA LIBRARY'),
           h('p', { className: 'text-sm text-[var(--text-secondary)]' },
-            `Database: `,
-            h('span', { className: 'text-[var(--text-primary)] font-semibold' }, schemaData?.database_name || activeDb),
-            ` • ${schemaData?.tables.length || 0} relational tables registered`
+            `${schemaData?.database_name || activeDb} · ${schemaData?.tables?.length || 0} tables`
           )
         ),
-
-        schemaData && h('div', { className: 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6' },
-          schemaData.tables.map(table => h('div', {
-            key: table.name,
-            className: 'luxury-card rounded-2xl p-6 space-y-4'
-          },
-            h('div', { className: 'flex items-center justify-between border-b border-[var(--border-subtle)] pb-3' },
-              h('div', { className: 'flex items-center space-x-2' },
-                h(Icon, { name: 'table', className: 'w-4 h-4 text-[var(--champagne)]' }),
-                h('h3', { className: 'font-semibold text-sm text-[var(--text-primary)] font-mono' }, table.name)
+        schemaData && h('div', { className: 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5' },
+          schemaData.tables.map(table =>
+            h('div', { key: table.name, className: 'luxury-card rounded-2xl p-5 space-y-3' },
+              h('div', { className: 'flex items-center justify-between border-b border-[var(--border-subtle)] pb-3' },
+                h('div', { className: 'flex items-center space-x-2' },
+                  h(Icon, { name: 'table', className: 'w-4 h-4 text-[var(--champagne)]' }),
+                  h('h3', { className: 'font-semibold text-sm text-[var(--text-primary)] font-mono' }, table.name)
+                ),
+                h('span', { className: 'text-[11px] font-mono bg-[var(--bg-surface-soft)] text-[var(--text-secondary)] px-2 py-0.5 rounded border border-[var(--border-subtle)]' }, `${table.row_count} rows`)
               ),
-              h('span', { className: 'text-[11px] font-mono bg-[var(--bg-surface-soft)] text-[var(--text-secondary)] px-2.5 py-0.5 rounded-full border border-[var(--border-subtle)]' },
-                `${table.row_count} rows`
-              )
-            ),
-
-            // Columns list
-            h('div', { className: 'space-y-1.5 max-h-56 overflow-y-auto pr-1' },
-              table.columns.map(col => h('div', {
-                key: col.name,
-                className: 'flex items-center justify-between text-xs py-1.5 px-2.5 rounded-lg bg-[var(--bg-surface-soft)] border border-[var(--border-subtle)] font-mono'
-              },
-                h('span', { className: 'text-[var(--text-primary)]' }, col.name),
-                h('div', { className: 'flex items-center space-x-1.5' },
-                  h('span', { className: 'text-[var(--text-muted)] text-[10px]' }, col.type),
-                  col.is_primary_key && h('span', { className: 'badge-ps7 text-[9px] px-1.5 py-0.5 rounded' }, 'PK'),
-                  col.foreign_key && h('span', { className: 'badge-ps2 text-[9px] px-1.5 py-0.5 rounded' }, 'FK')
+              h('div', { className: 'space-y-1 max-h-48 overflow-y-auto' },
+                table.columns.map(col =>
+                  h('div', { key: col.name, className: 'flex items-center justify-between text-xs py-1.5 px-2.5 rounded-lg bg-[var(--bg-surface-soft)] border border-[var(--border-subtle)] font-mono' },
+                    h('span', { className: 'text-[var(--text-primary)]' }, col.name),
+                    h('div', { className: 'flex items-center space-x-1' },
+                      h('span', { className: 'text-[var(--text-muted)] text-[10px]' }, col.type),
+                      col.is_primary_key && h('span', { className: 'badge-ps7 text-[9px] px-1.5 py-0.5 rounded' }, 'PK'),
+                      col.foreign_key && h('span', { className: 'badge-ps2 text-[9px] px-1.5 py-0.5 rounded' }, 'FK')
+                    )
+                  )
                 )
-              ))
-            ),
-
-            // Sample Record Preview
-            table.sample_rows && table.sample_rows.length > 0 && h('div', { className: 'pt-2 border-t border-[var(--border-subtle)] space-y-1' },
-              h('span', { className: 'text-[10px] font-mono text-[var(--text-muted)] uppercase font-semibold' }, 'SAMPLE RECORD'),
-              h('pre', { className: 'text-[10px] bg-[var(--bg-surface-soft)] p-2.5 rounded-lg text-[var(--text-secondary)] overflow-x-auto border border-[var(--border-subtle)] font-mono' },
-                JSON.stringify(table.sample_rows[0], null, 2)
+              ),
+              table.sample_rows?.length > 0 && h('div', { className: 'pt-2 border-t border-[var(--border-subtle)]' },
+                h('span', { className: 'text-[10px] font-mono text-[var(--text-muted)] uppercase font-semibold' }, 'SAMPLE'),
+                h('pre', { className: 'mt-1 text-[10px] bg-[var(--bg-surface-soft)] p-2 rounded-lg text-[var(--text-secondary)] overflow-x-auto border border-[var(--border-subtle)] font-mono' },
+                  JSON.stringify(table.sample_rows[0], null, 2)
+                )
               )
             )
-          ))
+          )
         )
       ),
 
-      // ==========================================
-      // VIEW 5: AUDIT TRAIL (TELEMETRY & HISTORY)
-      // ==========================================
-      activeTab === 'history' && h('div', { className: 'space-y-8 animate-entrance' },
+      // =======================================================================
+      // AUDIT TRAIL
+      // =======================================================================
+      activeTab === 'history' && h('div', { className: 'space-y-5 animate-entrance' },
         h('div', { className: 'flex flex-wrap items-center justify-between gap-4' },
-          h('div', { className: 'space-y-1' },
-            h('span', { className: 'text-[10px] font-mono tracking-widest text-[var(--champagne)] uppercase font-bold' }, 'PS2 TELEMETRY & VERIFICATION LOGS'),
-            h('h2', { className: 'font-serif-luxury text-3xl font-normal text-[var(--text-primary)]' }, 'AUDIT TRAIL')
+          h('div', { className: 'space-y-0.5' },
+            h('h2', { className: 'font-serif-luxury text-2xl font-normal text-[var(--text-primary)]' }, 'AUDIT TRAIL'),
+            h('p', { className: 'text-xs text-[var(--text-secondary)]' }, `${queryHistory.length} query records`)
           ),
           h('button', {
-            onClick: async () => {
-              await fetch(`${API_BASE}/api/history`, { method: "DELETE" });
-              fetchHistory();
-              showToast("Audit history cleared.");
-            },
+            onClick: async () => { await fetch(`${API_BASE}/api/history`, { method: "DELETE" }); fetchHistory(); showToast("Audit history cleared."); },
             className: 'btn-ghost-luxury px-4 py-2 rounded-xl text-xs font-semibold'
           }, 'Clear History')
         ),
-
         h('div', { className: 'luxury-card rounded-2xl overflow-hidden' },
           h('div', { className: 'overflow-x-auto' },
             h('table', { className: 'w-full text-left text-xs font-mono' },
               h('thead', { className: 'bg-[var(--bg-surface-soft)] text-[var(--text-secondary)] uppercase tracking-wider border-b border-[var(--border-subtle)]' },
                 h('tr', null,
-                  h('th', { className: 'p-4 font-semibold' }, 'Timestamp'),
-                  h('th', { className: 'p-4 font-semibold' }, 'Question'),
-                  h('th', { className: 'p-4 font-semibold' }, 'Generated SQL'),
-                  h('th', { className: 'p-4 font-semibold' }, 'Status'),
-                  h('th', { className: 'p-4 font-semibold' }, 'Reliability'),
-                  h('th', { className: 'p-4 font-semibold' }, 'Latency'),
-                  h('th', { className: 'p-4 font-semibold' }, 'Rows')
+                  h('th', { className: 'p-3.5 font-semibold text-[10px]' }, 'Time'),
+                  h('th', { className: 'p-3.5 font-semibold text-[10px]' }, 'Question'),
+                  h('th', { className: 'p-3.5 font-semibold text-[10px]' }, 'SQL'),
+                  h('th', { className: 'p-3.5 font-semibold text-[10px]' }, 'Status'),
+                  h('th', { className: 'p-3.5 font-semibold text-[10px]' }, 'Score'),
+                  h('th', { className: 'p-3.5 font-semibold text-[10px]' }, 'ms'),
+                  h('th', { className: 'p-3.5 font-semibold text-[10px]' }, 'Rows')
                 )
               ),
               h('tbody', { className: 'divide-y divide-[var(--border-subtle)] bg-[var(--bg-surface)]' },
                 queryHistory.length === 0
-                  ? h('tr', null, h('td', { colSpan: 7, className: 'p-8 text-center text-[var(--text-muted)] font-sans' }, 'No audit logs recorded yet.'))
-                  : queryHistory.map(item => h('tr', { key: item.id, className: 'hover:bg-[var(--bg-surface-soft)] transition' },
-                      h('td', { className: 'p-4 text-[var(--text-muted)] whitespace-nowrap' }, item.timestamp),
-                      h('td', { className: 'p-4 text-[var(--text-primary)] font-sans max-w-xs truncate font-semibold' }, item.question),
-                      h('td', { className: 'p-4 text-[var(--champagne)] max-w-sm truncate' }, item.sql || "N/A"),
-                      h('td', { className: 'p-4' },
-                        h('span', { className: `px-2.5 py-1 rounded text-[10px] font-bold ${
-                          item.verification_status === 'VERIFIED' ? 'badge-verified-luxury' :
-                          item.verification_status === 'NEEDS REVIEW' ? 'badge-warning-luxury' : 'badge-danger-luxury'
-                        }` }, item.verification_status || item.status)
-                      ),
-                      h('td', { className: 'p-4 font-bold text-[var(--text-primary)]' }, item.reliability_score ? `${item.reliability_score}/100` : '—'),
-                      h('td', { className: 'p-4 text-[var(--text-secondary)] whitespace-nowrap' }, `${item.execution_time_ms}ms`),
-                      h('td', { className: 'p-4 text-[var(--text-primary)]' }, item.row_count)
-                    ))
+                  ? h('tr', null, h('td', { colSpan: 7, className: 'p-8 text-center text-[var(--text-muted)] font-sans' }, 'No audit records yet.'))
+                  : queryHistory.map(item =>
+                      h('tr', { key: item.id, className: 'hover:bg-[var(--bg-surface-soft)] transition' },
+                        h('td', { className: 'p-3.5 text-[var(--text-muted)] whitespace-nowrap text-[11px]' }, item.timestamp),
+                        h('td', { className: 'p-3.5 text-[var(--text-primary)] font-sans max-w-xs truncate font-semibold text-[11px]' }, item.question),
+                        h('td', { className: 'p-3.5 text-[var(--champagne)] max-w-xs truncate text-[11px]' }, item.sql || '—'),
+                        h('td', { className: 'p-3.5' },
+                          h('span', { className: `px-2 py-0.5 rounded text-[9px] font-bold ${item.verification_status === 'VERIFIED' ? 'badge-verified-luxury' : item.verification_status === 'NEEDS REVIEW' ? 'badge-warning-luxury' : 'badge-danger-luxury'}` },
+                            item.verification_status || item.status
+                          )
+                        ),
+                        h('td', { className: 'p-3.5 font-bold text-[var(--text-primary)] text-[11px]' }, item.reliability_score ? `${item.reliability_score}/100` : '—'),
+                        h('td', { className: 'p-3.5 text-[var(--text-secondary)] text-[11px]' }, item.execution_time_ms),
+                        h('td', { className: 'p-3.5 text-[var(--text-primary)] text-[11px]' }, item.row_count)
+                      )
+                    )
               )
             )
           )
         )
       ),
 
-      // ==========================================
-      // VIEW 6: INSIGHTS (ENTERPRISE METRICS)
-      // ==========================================
-      activeTab === 'insights' && h('div', { className: 'space-y-8 animate-entrance' },
+      // =======================================================================
+      // INSIGHTS
+      // =======================================================================
+      activeTab === 'insights' && h('div', { className: 'space-y-6 animate-entrance' },
         h('div', { className: 'space-y-1' },
-          h('span', { className: 'text-[10px] font-mono tracking-widest text-[var(--champagne)] uppercase font-bold' }, 'ENTERPRISE SYSTEM TELEMETRY'),
-          h('h2', { className: 'font-serif-luxury text-3xl font-normal text-[var(--text-primary)]' }, 'TRUST & USAGE INSIGHTS')
+          h('h2', { className: 'font-serif-luxury text-2xl font-normal text-[var(--text-primary)]' }, 'TRUST & USAGE INSIGHTS')
         ),
-
-        // Large Editorial Metrics
-        h('div', { className: 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6' },
+        h('div', { className: 'grid grid-cols-2 lg:grid-cols-4 gap-5' },
           [
-            { label: "QUERIES ANSWERED", value: insightsMetrics.total || "1", sub: "Natural language questions processed" },
-            { label: "VERIFIED ANSWERS", value: insightsMetrics.verifiedPct, sub: "Grounded with zero hallucinations" },
-            { label: "AVG RELIABILITY", value: `${insightsMetrics.avgReliability}`, sub: "Weighted verification score / 100" },
-            { label: "AVG RESPONSE TIME", value: insightsMetrics.avgLatency, sub: "End-to-end execution & validation" }
-          ].map((m, idx) => h('div', { key: idx, className: 'luxury-card rounded-2xl p-6 space-y-2' },
-            h('span', { className: 'text-[10px] font-mono tracking-widest text-[var(--text-muted)] uppercase font-semibold' }, m.label),
-            h('p', { className: 'text-3xl font-serif-luxury text-[var(--text-primary)] font-normal pt-1' }, m.value),
-            h('p', { className: 'text-xs text-[var(--text-muted)]' }, m.sub)
-          ))
+            { label: "QUERIES ANSWERED", value: String(insightsMetrics.total || '0'), sub: "Natural language questions" },
+            { label: "VERIFIED RATE", value: insightsMetrics.verifiedPct, sub: "Zero-hallucination answers" },
+            { label: "AVG RELIABILITY", value: insightsMetrics.avgReliability, sub: "Score out of 100" },
+            { label: "AVG RESPONSE TIME", value: insightsMetrics.avgLatency, sub: "End-to-end with verification" },
+          ].map((m, i) =>
+            h('div', { key: i, className: 'luxury-card rounded-2xl p-5 space-y-2' },
+              h('span', { className: 'text-[9px] font-mono tracking-widest text-[var(--text-muted)] uppercase font-semibold' }, m.label),
+              h('p', { className: 'text-3xl font-serif-luxury text-[var(--text-primary)] font-normal pt-1' }, m.value),
+              h('p', { className: 'text-[11px] text-[var(--text-muted)]' }, m.sub)
+            )
+          )
         ),
-
-        // Architecture Pillars Card
-        h('div', { className: 'luxury-card rounded-2xl p-8 space-y-6' },
-          h('h3', { className: 'font-serif-luxury text-xl text-[var(--text-primary)]' }, 'HOW TRUSTDB-AI ENFORCES ZERO HALLUCINATION (PS7 + PS2)'),
-          h('div', { className: 'grid grid-cols-1 md:grid-cols-3 gap-6 text-sm leading-relaxed' },
-            h('div', { className: 'space-y-2' },
-              h('span', { className: 'text-[var(--champagne)] font-mono font-bold' }, '01. Read-Only Local Sandbox (PS7)'),
-              h('p', { className: 'text-[var(--text-secondary)] text-xs leading-relaxed' },
-                'Enforces read-only DDL/DML restrictions with 100% offline local SQLite execution and zero data transmission.'
-              )
-            ),
-            h('div', { className: 'space-y-2' },
-              h('span', { className: 'text-[var(--champagne)] font-mono font-bold' }, '02. Grounding Verification Matrix (PS2)'),
-              h('p', { className: 'text-[var(--text-secondary)] text-xs leading-relaxed' },
-                'Cross-checks every synthesized number, superlative, and entity against returned rows before rendering.'
-              )
-            ),
-            h('div', { className: 'space-y-2' },
-              h('span', { className: 'text-[var(--champagne)] font-mono font-bold' }, '03. Zero Hallucination Guarantee'),
-              h('p', { className: 'text-[var(--text-secondary)] text-xs leading-relaxed' },
-                'Flags unsupported claims as NEEDS REVIEW with detailed rationale instead of presenting unverified guesses.'
+        h('div', { className: 'luxury-card rounded-2xl p-6 space-y-4' },
+          h('h3', { className: 'font-serif-luxury text-lg text-[var(--text-primary)]' }, 'HOW NEURA-X ENFORCES ZERO HALLUCINATION'),
+          h('div', { className: 'grid grid-cols-1 md:grid-cols-3 gap-5 text-xs' },
+            [
+              { num: '01', title: 'Read-Only Local Sandbox', desc: 'All SQL is enforced read-only. No writes, DDL, or data modifications ever execute.' },
+              { num: '02', title: 'Grounding Verification Matrix', desc: 'Every number, entity, and aggregate in the answer is cross-checked against returned rows.' },
+              { num: '03', title: 'Zero Hallucination Guarantee', desc: 'Unsupported claims are flagged NEEDS REVIEW with detailed rationale.' },
+            ].map(l =>
+              h('div', { key: l.num, className: 'space-y-1.5' },
+                h('span', { className: 'text-[var(--champagne)] font-mono font-bold text-[11px]' }, `${l.num}. ${l.title}`),
+                h('p', { className: 'text-[var(--text-secondary)] leading-relaxed' }, l.desc)
               )
             )
           )
         )
-      )
+      ),
+
+      // =======================================================================
+      // PS2 HALLUCINATION LAB
+      // =======================================================================
+      activeTab === 'hallucination' && h(HallucinationLabWorkspace, {
+        activeDb,
+        databases,
+        showToast,
+      })
 
     ),
 
-    // SETTINGS & DATASET MODAL
+    // ── SETTINGS MODAL ───────────────────────────────────────────────────────
     isSettingsOpen && h('div', { className: 'fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-6 animate-entrance' },
-      h('div', { className: 'luxury-card rounded-3xl max-w-xl w-full p-8 space-y-6 max-h-[90vh] overflow-y-auto border border-[var(--border-medium)] shadow-2xl' },
+      h('div', { className: 'luxury-card rounded-2xl max-w-md w-full p-6 space-y-5 max-h-[90vh] overflow-y-auto border border-[var(--border-medium)] shadow-2xl' },
         h('div', { className: 'flex items-center justify-between border-b border-[var(--border-subtle)] pb-4' },
           h('div', null,
-            h('h3', { className: 'font-serif-luxury text-xl text-[var(--text-primary)]' }, 'ENGINE CONFIGURATION'),
-            h('p', { className: 'text-xs text-[var(--text-secondary)] mt-0.5' }, 'Select LLM providers, theme, or import custom CSV datasets into SQLite')
+            h('h3', { className: 'font-serif-luxury text-lg text-[var(--text-primary)]' }, 'CONFIGURATION'),
+            h('p', { className: 'text-xs text-[var(--text-secondary)] mt-0.5' }, 'LLM provider, theme, CSV import')
           ),
-          h('button', {
-            onClick: () => setIsSettingsOpen(false),
-            className: 'text-[var(--text-muted)] hover:text-[var(--text-primary)] p-2 rounded-xl bg-[var(--bg-surface-soft)]'
-          }, '✕')
+          h('button', { onClick: () => setIsSettingsOpen(false), className: 'text-[var(--text-muted)] hover:text-[var(--text-primary)] p-2 rounded-lg bg-[var(--bg-surface-soft)] text-lg leading-none' }, '✕')
         ),
 
-        // Settings Form
         h('form', {
           onSubmit: async (e) => {
             e.preventDefault();
             try {
-              const res = await fetch(`${API_BASE}/api/settings`, {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({
-                  llm_provider: settingsData.llm_provider,
-                  gemini_api_key: settingsData.gemini_key_input || undefined,
-                  openai_api_key: settingsData.openai_key_input || undefined,
-                  model_name: settingsData.model_name
-                })
+              const r = await fetch(`${API_BASE}/api/settings`, {
+                method: "POST", headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ llm_provider: settingsData.llm_provider, gemini_api_key: settingsData.gemini_key_input || undefined, openai_api_key: settingsData.openai_key_input || undefined, model_name: settingsData.model_name })
               });
-              if (res.ok) {
-                showToast("Configuration saved successfully.");
-                fetchSettings();
-                setIsSettingsOpen(false);
-              }
+              if (r.ok) { showToast("Configuration saved."); fetchSettings(); setIsSettingsOpen(false); }
             } catch (err) { showToast(`Error: ${err.message}`); }
           },
           className: 'space-y-4 text-xs'
         },
-          // Theme Preference Picker
+
           h('div', null,
-            h('label', { className: 'block text-[var(--text-muted)] font-mono uppercase tracking-wider mb-2 font-semibold' }, 'Color Theme Interface'),
-            h('div', { className: 'grid grid-cols-2 gap-3' },
-              h('button', {
-                type: 'button',
-                onClick: () => setTheme('dark'),
-                className: `p-3 rounded-xl border flex items-center justify-center space-x-2 text-xs font-semibold ${
-                  theme === 'dark' ? 'bg-[var(--champagne-dim)] border-[var(--champagne-border)] text-[var(--champagne)]' : 'bg-[var(--bg-surface-soft)] border-[var(--border-subtle)] text-[var(--text-secondary)]'
-                }`
-              },
-                h(Icon, { name: 'moon', className: 'w-4 h-4' }),
-                h('span', null, 'Dark Onyx')
-              ),
-              h('button', {
-                type: 'button',
-                onClick: () => setTheme('light'),
-                className: `p-3 rounded-xl border flex items-center justify-center space-x-2 text-xs font-semibold ${
-                  theme === 'light' ? 'bg-[var(--champagne-dim)] border-[var(--champagne-border)] text-[var(--champagne)]' : 'bg-[var(--bg-surface-soft)] border-[var(--border-subtle)] text-[var(--text-secondary)]'
-                }`
-              },
-                h(Icon, { name: 'sun', className: 'w-4 h-4' }),
-                h('span', null, 'Light Porcelain')
+            h('label', { className: 'block text-[var(--text-muted)] font-mono uppercase tracking-wider mb-2 font-semibold text-[10px]' }, 'Theme'),
+            h('div', { className: 'grid grid-cols-2 gap-2' },
+              [{ v: 'dark', icon: 'moon', label: 'Dark' }, { v: 'light', icon: 'sun', label: 'Light' }].map(t =>
+                h('button', { key: t.v, type: 'button', onClick: () => setTheme(t.v), className: `p-2.5 rounded-xl border flex items-center justify-center space-x-2 text-xs font-semibold ${theme === t.v ? 'bg-[var(--champagne-dim)] border-[var(--champagne-border)] text-[var(--champagne)]' : 'bg-[var(--bg-surface-soft)] border-[var(--border-subtle)] text-[var(--text-secondary)]'}` },
+                  h(Icon, { name: t.icon, className: 'w-3.5 h-3.5' }),
+                  h('span', null, t.label)
+                )
               )
             )
           ),
 
-          // Provider selector
           h('div', null,
-            h('label', { className: 'block text-[var(--text-muted)] font-mono uppercase tracking-wider mb-2 font-semibold' }, 'Active AI Engine'),
-            h('select', {
-              value: settingsData.llm_provider,
-              onChange: (e) => setSettingsData({ ...settingsData, llm_provider: e.target.value }),
-              className: 'w-full bg-[var(--bg-surface-soft)] border border-[var(--border-subtle)] rounded-xl px-4 py-2.5 text-[var(--text-primary)] outline-none focus:border-[var(--champagne)] font-medium'
-            },
-              h('option', { value: 'offline' }, 'Smart Heuristic Engine (100% Offline / Zero-Setup - PS7 Compliant)'),
-              h('option', { value: 'gemini' }, 'Google Gemini API (Gemini 2.5 Flash / 1.5 Pro)'),
-              h('option', { value: 'openai' }, 'OpenAI API (GPT-4o / GPT-4o-mini)'),
-              h('option', { value: 'ollama' }, 'Local Ollama (Llama 3 / CodeLlama - 100% Local)')
+            h('label', { className: 'block text-[var(--text-muted)] font-mono uppercase tracking-wider mb-2 font-semibold text-[10px]' }, 'AI Engine'),
+            h('select', { value: settingsData.llm_provider, onChange: e => setSettingsData({ ...settingsData, llm_provider: e.target.value }), className: 'w-full bg-[var(--bg-surface-soft)] border border-[var(--border-subtle)] rounded-xl px-3 py-2 text-[var(--text-primary)] outline-none focus:border-[var(--champagne)] font-medium' },
+              h('option', { value: 'offline' }, 'Smart Heuristic Engine (100% Offline — PS7)'),
+              h('option', { value: 'gemini' }, 'Google Gemini API'),
+              h('option', { value: 'openai' }, 'OpenAI API'),
+              h('option', { value: 'ollama' }, 'Local Ollama')
             )
           ),
 
           settingsData.llm_provider === 'gemini' && h('div', null,
-            h('label', { className: 'block text-[var(--text-muted)] font-mono uppercase tracking-wider mb-2 font-semibold' }, 'Gemini API Key'),
-            h('input', {
-              type: 'password',
-              placeholder: 'AIzaSy...',
-              value: settingsData.gemini_key_input,
-              onChange: (e) => setSettingsData({ ...settingsData, gemini_key_input: e.target.value }),
-              className: 'w-full bg-[var(--bg-surface-soft)] border border-[var(--border-subtle)] rounded-xl px-4 py-2.5 text-[var(--text-primary)] outline-none focus:border-[var(--champagne)] font-mono'
-            })
+            h('label', { className: 'block text-[var(--text-muted)] font-mono uppercase tracking-wider mb-2 font-semibold text-[10px]' }, 'Gemini API Key'),
+            h('input', { type: 'password', placeholder: 'AIzaSy...', value: settingsData.gemini_key_input, onChange: e => setSettingsData({ ...settingsData, gemini_key_input: e.target.value }), className: 'w-full bg-[var(--bg-surface-soft)] border border-[var(--border-subtle)] rounded-xl px-3 py-2 text-[var(--text-primary)] outline-none focus:border-[var(--champagne)] font-mono' })
           ),
 
           settingsData.llm_provider === 'openai' && h('div', null,
-            h('label', { className: 'block text-[var(--text-muted)] font-mono uppercase tracking-wider mb-2 font-semibold' }, 'OpenAI API Key'),
-            h('input', {
-              type: 'password',
-              placeholder: 'sk-...',
-              value: settingsData.openai_key_input,
-              onChange: (e) => setSettingsData({ ...settingsData, openai_key_input: e.target.value }),
-              className: 'w-full bg-[var(--bg-surface-soft)] border border-[var(--border-subtle)] rounded-xl px-4 py-2.5 text-[var(--text-primary)] outline-none focus:border-[var(--champagne)] font-mono'
-            })
+            h('label', { className: 'block text-[var(--text-muted)] font-mono uppercase tracking-wider mb-2 font-semibold text-[10px]' }, 'OpenAI API Key'),
+            h('input', { type: 'password', placeholder: 'sk-...', value: settingsData.openai_key_input, onChange: e => setSettingsData({ ...settingsData, openai_key_input: e.target.value }), className: 'w-full bg-[var(--bg-surface-soft)] border border-[var(--border-subtle)] rounded-xl px-3 py-2 text-[var(--text-primary)] outline-none focus:border-[var(--champagne)] font-mono' })
           ),
 
-          h('button', {
-            type: 'submit',
-            className: 'btn-champagne w-full py-3 rounded-xl font-bold transition'
-          }, 'Save Configuration')
+          h('button', { type: 'submit', className: 'btn-champagne w-full py-2.5 rounded-xl font-bold' }, 'Save Configuration')
         ),
 
-        // CSV Uploader Area
+        // CSV upload
         h('div', { className: 'pt-4 border-t border-[var(--border-subtle)] space-y-3' },
-          h('span', { className: 'text-[10px] font-mono tracking-widest text-[var(--text-muted)] uppercase block font-semibold' }, 'UPLOAD CUSTOM CSV DATASET'),
-          h('div', { className: 'border border-dashed border-[var(--border-medium)] rounded-2xl p-6 text-center space-y-2 bg-[var(--bg-surface-soft)]' },
-            h(Icon, { name: 'upload', className: 'w-8 h-8 text-[var(--champagne)] mx-auto' }),
-            h('p', { className: 'text-xs text-[var(--text-primary)] font-medium' }, 'Select any CSV file to import as an SQLite table'),
-            h('input', {
-              type: 'file',
-              accept: '.csv',
-              onChange: handleCSVUpload,
-              className: 'text-xs text-[var(--text-muted)] file:mr-3 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-xs file:bg-[var(--bg-surface)] file:text-[var(--champagne)] cursor-pointer'
-            })
+          h('span', { className: 'text-[10px] font-mono text-[var(--text-muted)] uppercase block font-semibold' }, 'IMPORT CSV DATASET'),
+          h('div', { className: 'border border-dashed border-[var(--border-medium)] rounded-xl p-5 text-center space-y-2 bg-[var(--bg-surface-soft)]' },
+            h(Icon, { name: 'upload', className: 'w-6 h-6 text-[var(--champagne)] mx-auto' }),
+            h('p', { className: 'text-xs text-[var(--text-primary)] font-medium' }, 'Upload any CSV file as a queryable table'),
+            h('input', { type: 'file', accept: '.csv', onChange: handleCSVUpload, className: 'text-xs text-[var(--text-muted)] file:mr-2 file:py-1 file:px-3 file:rounded-lg file:border-0 file:text-xs file:bg-[var(--bg-surface)] file:text-[var(--champagne)] cursor-pointer' })
           ),
           uploadStatus && h('p', { className: 'text-xs bg-[var(--bg-surface-soft)] p-3 rounded-xl text-[var(--champagne)] font-mono' }, uploadStatus)
         )
       )
     )
-
   );
 }
 
-// Render Root Component
+// Bootstrap
 const root = ReactDOM.createRoot(document.getElementById("root"));
 root.render(h(App));
